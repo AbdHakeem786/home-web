@@ -1,0 +1,125 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Search, MapPin, Bell, ChevronRight, Gift } from "lucide-react";
+import CategoryTile from "../../components/CategoryTile";
+import WorkerCard from "../../components/WorkerCard";
+import { useAppStore } from "../../store/appStore";
+import { useGeolocation } from "../../hooks/useGeolocation";
+import { categoriesApi, workersApi, notificationsApi, type ApiCategory, type ApiWorkerCard } from "../../api";
+
+export default function Home() {
+  const userName = useAppStore((s) => s.user?.name ?? "there");
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [nearby, setNearby] = useState<ApiWorkerCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const position = useGeolocation();
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([categoriesApi.listCategories(), workersApi.listWorkers({ online: true, verified: true, limit: 3, sort: "rating" })])
+      .then(([cats, workersRes]) => {
+        if (cancelled) return;
+        setCategories(cats);
+        setNearby(workersRes.workers);
+      })
+      .catch(() => {
+        /* silently ignore - empty state is shown below */
+      })
+      .finally(() => !cancelled && setLoading(false));
+    notificationsApi
+      .listMyNotifications()
+      .then(({ unreadCount }) => !cancelled && setUnreadCount(unreadCount))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Progressive enhancement: once the browser's geolocation resolves, re-fetch
+  // the featured workers sorted by actual distance instead of just rating.
+  useEffect(() => {
+    if (!position) return;
+    let cancelled = false;
+    workersApi
+      .listWorkers({ online: true, verified: true, limit: 3, sort: "distance", lat: position.lat, lng: position.lng })
+      .then(({ workers }) => !cancelled && setNearby(workers))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [position]);
+
+  return (
+    <div>
+      <div className="bg-primary px-4 pb-6 pt-5 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-1 text-xs text-white/70">
+              <MapPin size={12} /> Current location
+            </div>
+            <p className="text-sm font-medium">F-10 Markaz, Islamabad</p>
+          </div>
+          <Link to="/notifications" className="relative rounded-full bg-white/15 p-2">
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-warning" />
+            )}
+          </Link>
+        </div>
+        <p className="mt-4 font-display text-lg font-semibold">
+          Assalam-o-Alaikum, {userName} 👋
+        </p>
+        <p className="text-sm text-white/70">What do you need help with today?</p>
+
+        <Link
+          to="/workers/all"
+          className="mt-4 flex items-center gap-2 rounded-xl bg-white px-3.5 py-3 text-ink-muted"
+        >
+          <Search size={16} />
+          <span className="text-sm">Search plumber, electrician, cleaner...</span>
+        </Link>
+      </div>
+
+      <div className="px-4">
+        <div className="-mt-3 mb-5 flex items-center gap-3 rounded-2xl border border-border bg-white p-3.5 shadow-sm">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning-light text-[#92620A]">
+            <Gift size={18} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-ink">15% off AC servicing this weekend</p>
+            <p className="text-xs text-ink-muted">Use code WEEKEND15 at checkout</p>
+          </div>
+          <ChevronRight size={16} className="text-ink-muted" />
+        </div>
+
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-display text-sm font-semibold text-ink">Categories</h2>
+          <Link to="/categories" className="text-xs font-medium text-primary">
+            View all
+          </Link>
+        </div>
+        <div className="mb-6 grid grid-cols-4 gap-2.5">
+          {categories.slice(0, 8).map((c) => (
+            <CategoryTile key={c.id} category={c} />
+          ))}
+          {!loading && categories.length === 0 && (
+            <p className="col-span-4 text-center text-xs text-ink-muted">No categories yet.</p>
+          )}
+        </div>
+
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-display text-sm font-semibold text-ink">Nearby workers online now</h2>
+        </div>
+        <div className="flex flex-col gap-2.5">
+          {nearby.map((w) => (
+            <WorkerCard key={w.id} worker={w} />
+          ))}
+          {!loading && nearby.length === 0 && (
+            <p className="py-6 text-center text-sm text-ink-muted">No workers online right now.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,108 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@theme {
+  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-primary: #6C3BFF;
+  --color-primary-dark: #5729DB;
+  --color-primary-light: #EFE8FF;
+  --color-secondary: #8B5CF6;
+  --color-ink: #16121F;
+  --color-ink-muted: #6B6478;
+  --color-surface: #F5F5F5;
+  --color-surface-alt: #FAF9FC;
+  --color-border: #E7E3EF;
+  --color-success: #16A34A;
+  --color-success-light: #E9F9EF;
+  --color-warning: #F59E0B;
+  --color-warning-light: #FFF6E5;
+  --color-danger: #E11D48;
+  --color-danger-light: #FDECEF;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Route-line signature motif: vertical connector with nodes,
+   used across onboarding, booking steps, live tracking + job status. */
+.route-line {
+  position: relative;
+}
+.route-line::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 28px;
+  bottom: -4px;
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--color-border) 0px,
+    var(--color-border) 4px,
+    transparent 4px,
+    transparent 9px
+  );
+}
+.route-line.route-line--active::before {
+  background: var(--color-primary);
+}
+.route-line:last-child::before {
+  display: none;
+}
+
+.route-node {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 1;
+  border: 2px solid var(--color-border);
+  background: #fff;
+}
+.route-node--done {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.route-node--current {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-light);
+}
+
+.scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.pulse-ring {
+  animation: pulse-ring 1.8s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-ring { animation: none; }
+  * { transition: none !important; }
+}
