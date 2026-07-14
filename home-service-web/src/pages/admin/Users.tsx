@@ -33,7 +33,7 @@ export default function AdminUsers() {
     <div>
       <h1 className="mb-5 font-display text-xl font-bold text-ink">Users</h1>
       {error && <p className="mb-4 rounded-xl bg-danger-light px-3 py-2.5 text-sm text-danger">{error}</p>}
-      <div className="overflow-x-auto rounded-2xl border border-border bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-border text-xs text-ink-muted">
             <tr>

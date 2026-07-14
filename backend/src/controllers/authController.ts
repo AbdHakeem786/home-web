@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
 import { User, IUser } from "../models/User";
+import { WorkerProfile } from "../models/WorkerProfile";
 import { Otp, OtpPurpose } from "../models/Otp";
 import { EmailVerificationToken } from "../models/EmailVerificationToken";
 import { AppError } from "../utils/AppError";
@@ -9,6 +10,7 @@ import { ok, created } from "../utils/apiResponse";
 import { generateOtp, otpExpiryDate, deliverOtp } from "../utils/otp";
 import { generateVerificationToken, hashToken, sendVerificationEmail } from "../utils/email";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt";
+import { initials } from "../utils/initials";
 import { env } from "../config/env";
 import { AuthTokenPayload } from "../types";
 
@@ -43,7 +45,14 @@ function issueTokens(userId: string, role: AuthTokenPayload["role"]) {
 }
 
 export async function register(req: Request, res: Response): Promise<void> {
-  const { name, phone, password, role, email } = req.body;
+  const { name, phone, password, role, email, referralCode } = req.body;
+
+  let referredBy: string | undefined;
+  if (referralCode) {
+    const referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });
+    if (!referrer) throw AppError.badRequest("Invalid referral code");
+    referredBy = referrer._id.toString();
+  }
 
   const existing = await User.findOne({ phone });
   if (existing) {
@@ -56,6 +65,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     existing.passwordHash = await bcrypt.hash(password, 10);
     existing.role = role;
     existing.email = email;
+    if (referredBy && !existing.referredBy) existing.referredBy = referredBy as any;
     await existing.save();
 
     await issueEmailVerification(existing);
@@ -68,7 +78,7 @@ export async function register(req: Request, res: Response): Promise<void> {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const user = await User.create({ name, phone, passwordHash, role, email });
+  const user = await User.create({ name, phone, passwordHash, role, email, referredBy });
 
   await issueEmailVerification(user);
 
@@ -337,6 +347,117 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
 
   await user.save();
   ok(res, user);
+}
+
+export async function listFavoriteWorkers(req: Request, res: Response): Promise<void> {
+  const user = await User.findById(req.auth!.userId).populate({
+    path: "favoriteWorkers",
+    populate: [
+      { path: "user", select: "name avatar" },
+      { path: "category", select: "name icon" },
+    ],
+  });
+  if (!user) throw AppError.notFound("User not found");
+
+  // Shaped to match GET /workers' card format so the frontend can reuse the same
+  // worker card component/type for the saved-workers list.
+  const shaped = (user.favoriteWorkers as unknown as any[])
+    .filter((w) => w.user && w.category)
+    .map((w) => ({
+      id: w._id.toString(),
+      name: w.user.name,
+      avatar: w.user.avatar ?? initials(w.user.name),
+      category: w.category.name,
+      categoryId: w.category._id.toString(),
+      rating: w.rating,
+      reviewCount: w.reviewCount,
+      completedJobs: w.completedJobs,
+      experienceYears: w.experienceYears,
+      priceFrom: w.priceFrom,
+      distanceKm: null,
+      online: w.online,
+      verified: w.verified,
+      bio: w.bio,
+    }));
+
+  ok(res, shaped);
+}
+
+export async function listAddresses(req: Request, res: Response): Promise<void> {
+  const user = await User.findById(req.auth!.userId);
+  if (!user) throw AppError.notFound("User not found");
+  ok(res, { addresses: user.addresses, currentAddressId: user.currentAddressId?.toString() ?? null });
+}
+
+export async function addAddress(req: Request, res: Response): Promise<void> {
+  const { label, address } = req.body;
+  const user = await User.findById(req.auth!.userId);
+  if (!user) throw AppError.notFound("User not found");
+
+  user.addresses.push({ label, address } as never);
+  const created = user.addresses[user.addresses.length - 1];
+  // First address a customer saves automatically becomes the one shown on Home.
+  if (!user.currentAddressId) user.currentAddressId = created._id;
+  await user.save();
+
+  ok(res, { addresses: user.addresses, currentAddressId: user.currentAddressId!.toString() });
+}
+
+export async function updateAddress(req: Request, res: Response): Promise<void> {
+  const { label, address } = req.body as { label?: string; address?: string };
+  const user = await User.findById(req.auth!.userId);
+  if (!user) throw AppError.notFound("User not found");
+
+  const target = user.addresses.id(req.params.id);
+  if (!target) throw AppError.notFound("Address not found");
+  if (label !== undefined) target.label = label;
+  if (address !== undefined) target.address = address;
+  await user.save();
+
+  ok(res, { addresses: user.addresses, currentAddressId: user.currentAddressId?.toString() ?? null });
+}
+
+export async function deleteAddress(req: Request, res: Response): Promise<void> {
+  const user = await User.findById(req.auth!.userId);
+  if (!user) throw AppError.notFound("User not found");
+
+  const target = user.addresses.id(req.params.id);
+  if (!target) throw AppError.notFound("Address not found");
+  target.deleteOne();
+
+  // Deleting the current address falls back to whatever's left, so Home never
+  // points at an address that no longer exists.
+  if (user.currentAddressId?.toString() === req.params.id) {
+    user.currentAddressId = user.addresses[0]?._id;
+  }
+  await user.save();
+
+  ok(res, { addresses: user.addresses, currentAddressId: user.currentAddressId?.toString() ?? null });
+}
+
+export async function setCurrentAddress(req: Request, res: Response): Promise<void> {
+  const user = await User.findById(req.auth!.userId);
+  if (!user) throw AppError.notFound("User not found");
+
+  const target = user.addresses.id(req.params.id);
+  if (!target) throw AppError.notFound("Address not found");
+  user.currentAddressId = target._id;
+  await user.save();
+
+  ok(res, { addresses: user.addresses, currentAddressId: user.currentAddressId!.toString() });
+}
+
+export async function addFavoriteWorker(req: Request, res: Response): Promise<void> {
+  const worker = await WorkerProfile.findById(req.params.workerId);
+  if (!worker) throw AppError.notFound("Worker not found");
+
+  await User.findByIdAndUpdate(req.auth!.userId, { $addToSet: { favoriteWorkers: worker._id } });
+  ok(res, { message: "Added to favorites" });
+}
+
+export async function removeFavoriteWorker(req: Request, res: Response): Promise<void> {
+  await User.findByIdAndUpdate(req.auth!.userId, { $pull: { favoriteWorkers: req.params.workerId } });
+  ok(res, { message: "Removed from favorites" });
 }
 
 export async function deleteProfile(req: Request, res: Response): Promise<void> {

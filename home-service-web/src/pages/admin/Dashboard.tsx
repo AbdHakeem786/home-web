@@ -32,7 +32,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {cards.map(({ icon: Icon, label, value }) => (
-          <div key={label} className="rounded-2xl border border-border bg-white p-4">
+          <div key={label} className="rounded-2xl border border-border bg-card p-4">
             <Icon size={18} className="text-primary" />
             <p className="mt-2 font-display text-xl font-bold text-ink">{value}</p>
             <p className="text-xs text-ink-muted">{label}</p>
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <div className="mt-6 rounded-2xl border border-border bg-white p-4">
+      <div className="mt-6 rounded-2xl border border-border bg-card p-4">
         <h2 className="mb-3 font-display text-sm font-semibold text-ink">Recent bookings</h2>
         <div className="flex flex-col divide-y divide-border">
           {recentBookings.map((b) => (

@@ -18,7 +18,7 @@ export default function Input({ label, icon, error, className, id, ...props }: I
         <input
           id={id}
           className={cn(
-            "w-full rounded-xl border border-border bg-white py-3 text-sm text-ink placeholder:text-ink-muted/70 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15",
+            "w-full rounded-xl border border-border bg-card py-3 text-sm text-ink placeholder:text-ink-muted/70 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15",
             icon ? "pl-10 pr-3" : "px-3",
             error && "border-danger focus:border-danger focus:ring-danger/15",
             className

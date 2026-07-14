@@ -2,9 +2,13 @@ import { Request, Response } from "express";
 import { Booking } from "../models/Booking";
 import { WorkerProfile } from "../models/WorkerProfile";
 import { WalletTransaction } from "../models/WalletTransaction";
+import { Coupon } from "../models/Coupon";
+import { User } from "../models/User";
 import { AppError } from "../utils/AppError";
 import { ok, created, paginated } from "../utils/apiResponse";
 import { notifyUser } from "../utils/notify";
+import { computeCouponDiscount } from "../utils/coupons";
+import { isWorkerAvailableAt } from "../utils/workerSchedule";
 import { BOOKING_STATUS_FLOW, BookingStatus } from "../types";
 import { env } from "../config/env";
 import { getStripe, toStripeAmount } from "../utils/stripe";
@@ -15,15 +19,65 @@ import { getStripe, toStripeAmount } from "../utils/stripe";
 // a full refund - it's not the customer's fault in those cases.
 const CANCELLATION_FEE_STATUSES: BookingStatus[] = ["on_the_way", "arrived", "in_progress"];
 const CANCELLATION_FEE_RATE = 0.2;
+const REFERRAL_REWARD_AMOUNT = 200;
+
+// Rewards the referrer the first (and only the first) time their referral completes
+// a booking. The findOneAndUpdate's referralRewarded:false filter makes the check-and-flip
+// atomic, so two bookings completing around the same time can't both trigger a reward.
+async function rewardReferralIfEligible(customerId: string): Promise<void> {
+  const customer = await User.findOneAndUpdate(
+    { _id: customerId, referredBy: { $exists: true, $ne: null }, referralRewarded: false },
+    { referralRewarded: true }
+  );
+  if (!customer?.referredBy) return;
+
+  const code = `REF${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  await Coupon.create({
+    code,
+    type: "flat",
+    value: REFERRAL_REWARD_AMOUNT,
+    maxUses: 1,
+    perUserLimit: 1,
+    restrictToUser: customer.referredBy,
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  });
+
+  await notifyUser(customer.referredBy.toString(), {
+    title: "Referral reward unlocked!",
+    body: `Someone you referred completed their first booking. Use code ${code} for Rs ${REFERRAL_REWARD_AMOUNT} off your next booking.`,
+    type: "offer",
+  });
+}
 
 export async function createBooking(req: Request, res: Response): Promise<void> {
-  const { workerId, categoryId, date, time, address, description, estimatedPrice, problemImages, paymentMethod } =
-    req.body;
+  const {
+    workerId,
+    categoryId,
+    date,
+    time,
+    address,
+    description,
+    estimatedPrice,
+    problemImages,
+    paymentMethod,
+    couponCode,
+  } = req.body;
 
   const worker = await WorkerProfile.findById(workerId);
   if (!worker) throw AppError.notFound("Worker not found");
   if (!worker.verified) {
     throw AppError.badRequest("This worker has not been verified yet and cannot accept bookings.");
+  }
+  if (!isWorkerAvailableAt(worker.schedule, date, time)) {
+    throw AppError.badRequest("This worker is not available at the selected date and time.");
+  }
+
+  let discountAmount = 0;
+  let coupon = null;
+  if (couponCode) {
+    coupon = await Coupon.findOne({ code: String(couponCode).trim().toUpperCase() });
+    if (!coupon) throw AppError.notFound("Invalid coupon code");
+    discountAmount = computeCouponDiscount(coupon, req.auth!.userId, estimatedPrice);
   }
 
   const booking = await Booking.create({
@@ -37,8 +91,16 @@ export async function createBooking(req: Request, res: Response): Promise<void> 
     estimatedPrice,
     problemImages: problemImages ?? [],
     paymentMethod: paymentMethod ?? "cash",
+    couponCode: coupon?.code,
+    discountAmount,
     status: "pending",
   });
+
+  if (coupon) {
+    coupon.usedCount += 1;
+    coupon.usedBy.push(req.auth!.userId as any);
+    await coupon.save();
+  }
 
   await notifyUser(worker.user.toString(), {
     title: "New booking request",
@@ -112,10 +174,11 @@ export async function createPaymentIntent(req: Request, res: Response): Promise<
   }
 
   const stripe = getStripe();
+  const payableAmount = Math.max(0, booking.estimatedPrice - (booking.discountAmount ?? 0));
   const intent = booking.stripePaymentIntentId
     ? await stripe.paymentIntents.retrieve(booking.stripePaymentIntentId)
     : await stripe.paymentIntents.create({
-        amount: toStripeAmount(booking.estimatedPrice),
+        amount: toStripeAmount(payableAmount),
         currency: "pkr",
         metadata: { bookingId: booking._id.toString() },
       });
@@ -226,6 +289,7 @@ export async function updateBookingStatus(req: Request, res: Response): Promise<
       type: "credit",
       booking: booking._id,
     });
+    await rewardReferralIfEligible(booking.customer.toString());
   }
 
   // Notify whoever didn't make the change. A worker- or customer-initiated

@@ -7,7 +7,7 @@ export default function CategoryBreakdownChart({ data }: { data: CategoryRow[] }
   const max = Math.max(1, ...data.map((d) => d.bookings));
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-4">
+    <div className="rounded-2xl border border-border bg-card p-4">
       <h2 className="mb-3 font-display text-sm font-semibold text-ink">Bookings by category</h2>
       {data.length === 0 ? (
         <p className="py-8 text-center text-sm text-ink-muted">No booking activity yet.</p>

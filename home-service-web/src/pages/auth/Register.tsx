@@ -44,7 +44,7 @@ export default function Register() {
             onClick={() => setRole(r)}
             className={cn(
               "rounded-lg py-2 text-sm font-medium capitalize transition-colors",
-              role === r ? "bg-white text-primary shadow-sm" : "text-ink-muted"
+              role === r ? "bg-card text-primary shadow-sm" : "text-ink-muted"
             )}
           >
             {r}

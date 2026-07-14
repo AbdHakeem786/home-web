@@ -58,3 +58,24 @@ export const updateAvailabilitySchema = z.object({
     online: z.boolean(),
   }),
 });
+
+const timeOfDay = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use 24h HH:mm format");
+
+export const updateScheduleSchema = z.object({
+  body: z.object({
+    schedule: z
+      .array(
+        z
+          .object({
+            day: z.coerce.number().int().min(0).max(6),
+            startTime: timeOfDay,
+            endTime: timeOfDay,
+          })
+          .refine((s) => s.startTime < s.endTime, {
+            message: "startTime must be before endTime",
+            path: ["endTime"],
+          })
+      )
+      .max(50),
+  }),
+});

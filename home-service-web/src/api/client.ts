@@ -114,7 +114,13 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     if (newToken) {
       return apiRequest<T>(path, { ...options, retry: false });
     }
-    tokenStorage.clear();
+    // Refresh also failed - the session is truly over. Clearing storage alone
+    // leaves the app's in-memory auth state stale (still "logged in" but every
+    // subsequent call 401s silently), so tell the app to log out and redirect.
+    if (tokenStorage.getAccess()) {
+      tokenStorage.clear();
+      window.dispatchEvent(new Event("rmh:session-expired"));
+    }
   }
 
   let json: ApiEnvelope<T> | undefined;
@@ -125,7 +131,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   if (!res.ok || !json?.success) {
-    throw new ApiError(json?.message ?? `Request failed (${res.status})`, res.status, json?.details);
+    const fieldErrors = (json?.details as { fieldErrors?: Record<string, string[]> } | undefined)?.fieldErrors;
+    const fieldMessage = fieldErrors && Object.values(fieldErrors).flat().join(" ");
+    throw new ApiError(fieldMessage || json?.message || `Request failed (${res.status})`, res.status, json?.details);
   }
 
   return json;

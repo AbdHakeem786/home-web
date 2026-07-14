@@ -135,8 +135,8 @@ export default function BookingHistory() {
           <p className="py-10 text-center text-sm text-ink-muted">No bookings yet.</p>
         )}
         {bookings.map((b) => {
-          const workerName = typeof b.worker === "object" ? b.worker.user?.name : undefined;
-          const workerId = typeof b.worker === "object" ? b.worker.id : b.worker;
+          const workerName = b.worker && typeof b.worker === "object" ? b.worker.user?.name : undefined;
+          const workerId = b.worker && typeof b.worker === "object" ? b.worker.id : b.worker;
           const active = b.status !== "completed" && b.status !== "cancelled";
           return (
             <div key={b.id} className="rounded-2xl border border-border p-3.5">

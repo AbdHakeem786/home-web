@@ -7,6 +7,7 @@ import {
   updateWorkerProfileSchema,
   updateLocationSchema,
   updateAvailabilitySchema,
+  updateScheduleSchema,
 } from "../validators/workerValidators";
 import * as workerController from "../controllers/workerController";
 
@@ -41,6 +42,13 @@ router.patch(
   requireRole("worker"),
   validate(updateAvailabilitySchema),
   workerController.updateMyAvailability
+);
+router.patch(
+  "/me/schedule",
+  requireAuth,
+  requireRole("worker"),
+  validate(updateScheduleSchema),
+  workerController.updateMySchedule
 );
 router.patch("/:id/verify", requireAuth, requireRole("admin"), workerController.verifyWorker);
 router.get("/:id", workerController.getWorkerProfile);

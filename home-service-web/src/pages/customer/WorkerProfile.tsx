@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { BadgeCheck, Phone, Briefcase, Award } from "lucide-react";
+import { BadgeCheck, Heart, Phone, Briefcase, Award } from "lucide-react";
 import TopBar from "../../components/ui/TopBar";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
@@ -8,6 +8,7 @@ import RatingStars from "../../components/ui/RatingStars";
 import { workersApi, type ApiWorkerProfile, type ApiReview } from "../../api";
 import { formatPKR, isAvatarUrl } from "../../lib/utils";
 import { resolveUploadUrl } from "../../api/uploads";
+import { useFavoritesStore } from "../../store/favoritesStore";
 
 export default function WorkerProfile() {
   const { id } = useParams();
@@ -15,6 +16,12 @@ export default function WorkerProfile() {
   const [worker, setWorker] = useState<ApiWorkerProfile | null>(null);
   const [workerReviews, setWorkerReviews] = useState<ApiReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const isFavorited = useFavoritesStore((s) => (worker ? s.ids.has(worker.id) : false));
+  const toggleFavorite = useFavoritesStore((s) => s.toggle);
+
+  useEffect(() => {
+    useFavoritesStore.getState().load();
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -55,7 +62,21 @@ export default function WorkerProfile() {
 
   return (
     <div>
-      <TopBar title="Worker profile" back />
+      <TopBar
+        title="Worker profile"
+        back
+        right={
+          <button
+            type="button"
+            onClick={() => toggleFavorite(worker.id)}
+            aria-label={isFavorited ? "Remove from saved workers" : "Save worker"}
+            aria-pressed={isFavorited}
+            className="rounded-lg p-1.5 text-ink-muted hover:bg-surface"
+          >
+            <Heart size={20} className={isFavorited ? "fill-danger text-danger" : ""} />
+          </button>
+        }
+      />
 
       <div className="px-4 pt-2">
         <div className="flex items-center gap-4">
@@ -134,7 +155,7 @@ export default function WorkerProfile() {
         </div>
       </div>
 
-      <div className="sticky bottom-0 mt-6 border-t border-border bg-white p-4">
+      <div className="sticky bottom-0 mt-6 border-t border-border bg-card p-4">
         {worker.verified ? (
           <Button fullWidth size="lg" onClick={() => navigate(`/booking/new/${worker.id}`)}>
             Book now · {formatPKR(worker.priceFrom)}

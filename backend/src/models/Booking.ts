@@ -12,6 +12,8 @@ export interface IBooking extends Document {
   description: string;
   estimatedPrice: number;
   finalPrice?: number;
+  couponCode?: string;
+  discountAmount: number;
   cancelReason?: string;
   cancellationFee?: number;
   refundAmount?: number;
@@ -36,6 +38,8 @@ const bookingSchema = new Schema<IBooking>(
     description: { type: String, default: "" },
     estimatedPrice: { type: Number, required: true, min: 0 },
     finalPrice: { type: Number, min: 0 },
+    couponCode: { type: String },
+    discountAmount: { type: Number, default: 0, min: 0 },
     cancelReason: { type: String },
     cancellationFee: { type: Number, min: 0 },
     refundAmount: { type: Number, min: 0 },

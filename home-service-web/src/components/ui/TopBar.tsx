@@ -13,7 +13,7 @@ export default function TopBar({
 }) {
   const navigate = useNavigate();
   return (
-    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-white/95 px-4 py-3.5 backdrop-blur">
+    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-4 py-3.5 backdrop-blur">
       <div className="flex items-center gap-2">
         {back && (
           <button

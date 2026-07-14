@@ -12,6 +12,7 @@ export async function createBooking(input: {
   estimatedPrice: number;
   problemImages?: string[];
   paymentMethod?: "cash" | "stripe";
+  couponCode?: string;
 }) {
   const res = await api.post<ApiBooking>("/bookings", input);
   return res.data;

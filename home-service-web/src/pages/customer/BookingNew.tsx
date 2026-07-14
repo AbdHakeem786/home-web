@@ -5,7 +5,7 @@ import TopBar from "../../components/ui/TopBar";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import ImageUploader from "../../components/ImageUploader";
-import { workersApi, type ApiWorkerProfile } from "../../api";
+import { authApi, workersApi, type ApiWorkerProfile } from "../../api";
 import { formatPKR, isAvatarUrl } from "../../lib/utils";
 import { resolveUploadUrl } from "../../api/uploads";
 
@@ -24,6 +24,17 @@ export default function BookingNew() {
     if (!workerId) return;
     workersApi.getWorker(workerId).then(({ worker }) => setWorker(worker));
   }, [workerId]);
+
+  // Prefill from the customer's saved current address so they don't retype it every time.
+  useEffect(() => {
+    authApi
+      .listAddresses()
+      .then(({ addresses, currentAddressId }) => {
+        const current = addresses.find((a) => a.id === currentAddressId);
+        if (current) setAddress((prev) => prev || current.address);
+      })
+      .catch(() => undefined);
+  }, []);
 
   if (!worker) {
     return (

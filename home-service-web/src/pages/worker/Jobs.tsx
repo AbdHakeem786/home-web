@@ -135,8 +135,8 @@ export default function WorkerJobs() {
       )}
       <div className="flex flex-col gap-3">
         {jobs.map((j) => {
-          const customerName = typeof j.customer === "object" ? j.customer.name : "Customer";
-          const categoryName = typeof j.category === "object" ? j.category.name : "";
+          const customerName = j.customer && typeof j.customer === "object" ? j.customer.name : "Customer";
+          const categoryName = j.category && typeof j.category === "object" ? j.category.name : "";
           const busy = busyId === j.id;
           const isActive = j.status === "accepted" || j.status === "on_the_way" || j.status === "arrived" || j.status === "in_progress";
           const sharing = activeBookingId === j.id;

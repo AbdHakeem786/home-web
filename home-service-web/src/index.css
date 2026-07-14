@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -14,13 +16,41 @@
   --color-ink-muted: #6B6478;
   --color-surface: #F5F5F5;
   --color-surface-alt: #FAF9FC;
+  --color-card: #FFFFFF;
   --color-border: #E7E3EF;
   --color-success: #16A34A;
   --color-success-light: #E9F9EF;
   --color-warning: #F59E0B;
   --color-warning-light: #FFF6E5;
+  --color-warning-ink: #92620A;
   --color-danger: #E11D48;
   --color-danger-light: #FDECEF;
+
+  /* Fixed brand-dark surface (admin nav rail): intentionally stays dark
+     in both themes, unlike --color-ink which flips for text contrast. */
+  --color-sidebar: #16121F;
+}
+
+/* Dark theme: same semantic tokens, repointed to a dark palette.
+   Everything reads these as CSS vars, so utilities never need a dark: prefix. */
+.dark {
+  --color-primary: #8B6BFF;
+  --color-primary-dark: #6C3BFF;
+  --color-primary-light: #2B2147;
+  --color-secondary: #A78BFA;
+  --color-ink: #F1EEF9;
+  --color-ink-muted: #9D96AE;
+  --color-surface: #121018;
+  --color-surface-alt: #17141E;
+  --color-card: #1C1926;
+  --color-border: #2C2838;
+  --color-success: #34D399;
+  --color-success-light: #10301F;
+  --color-warning: #FBBF24;
+  --color-warning-light: #3A2A0D;
+  --color-warning-ink: #FCD34D;
+  --color-danger: #FB7185;
+  --color-danger-light: #3A1620;
 }
 
 html, body, #root {
@@ -30,8 +60,9 @@ html, body, #root {
 body {
   font-family: var(--font-body);
   color: var(--color-ink);
-  background: #FFFFFF;
+  background: var(--color-card);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .font-display {
@@ -78,7 +109,7 @@ body {
   flex-shrink: 0;
   z-index: 1;
   border: 2px solid var(--color-border);
-  background: #fff;
+  background: var(--color-card);
 }
 .route-node--done {
   background: var(--color-primary);

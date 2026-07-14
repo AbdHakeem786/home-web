@@ -3,7 +3,6 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import TopBar from "../../components/ui/TopBar";
 import WorkerCard from "../../components/WorkerCard";
-import { useGeolocation } from "../../hooks/useGeolocation";
 import { categoriesApi, workersApi, type ApiCategory, type ApiWorkerCard } from "../../api";
 
 export default function WorkerList() {
@@ -15,7 +14,6 @@ export default function WorkerList() {
   const [category, setCategory] = useState<ApiCategory | null>(null);
   const [list, setList] = useState<ApiWorkerCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const position = useGeolocation();
 
   // Keep the input in sync if the URL's search param changes elsewhere (e.g. back/forward nav).
   useEffect(() => setSearchInput(search), [search]);
@@ -47,9 +45,7 @@ export default function WorkerList() {
         category: resolvedCategoryId,
         search: search || undefined,
         verified: true,
-        ...(position
-          ? { sort: "distance" as const, lat: position.lat, lng: position.lng }
-          : { sort: "rating" as const }),
+        sort: "rating",
       }),
     ])
       .then(([cat, workersRes]) => {
@@ -61,7 +57,7 @@ export default function WorkerList() {
     return () => {
       cancelled = true;
     };
-  }, [resolvedCategoryId, search, position]);
+  }, [resolvedCategoryId, search]);
 
   return (
     <div>
@@ -81,7 +77,7 @@ export default function WorkerList() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by name, skill, category..."
-            className="w-full rounded-xl border border-border bg-white py-2.5 pl-9 pr-9 text-sm text-ink placeholder:text-ink-muted/70 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-9 text-sm text-ink placeholder:text-ink-muted/70 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
             aria-label="Search workers"
           />
           {searchInput && (

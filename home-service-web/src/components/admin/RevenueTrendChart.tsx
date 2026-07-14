@@ -46,7 +46,7 @@ export default function RevenueTrendChart({ data }: { data: RevenuePoint[] }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-4">
+    <div className="rounded-2xl border border-border bg-card p-4">
       <div className="mb-3 flex items-baseline justify-between">
         <div>
           <h2 className="font-display text-sm font-semibold text-ink">Revenue trend</h2>
@@ -113,7 +113,7 @@ export default function RevenueTrendChart({ data }: { data: RevenuePoint[] }) {
                   cy={yAt(data[hoverIndex].revenue)}
                   r={4}
                   fill="var(--color-primary)"
-                  stroke="white"
+                  stroke="var(--color-card)"
                   strokeWidth={2}
                 />
               </>
@@ -122,7 +122,7 @@ export default function RevenueTrendChart({ data }: { data: RevenuePoint[] }) {
 
           {hovered && hoverIndex !== null && (
             <div
-              className="pointer-events-none absolute top-0 -translate-x-1/2 rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs shadow-sm"
+              className="pointer-events-none absolute top-0 -translate-x-1/2 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs shadow-sm"
               style={{ left: `${(xAt(hoverIndex) / WIDTH) * 100}%` }}
             >
               <p className="font-medium text-ink">{formatShortDate(hovered.date)}</p>

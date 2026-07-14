@@ -1,5 +1,5 @@
 import { api, tokenStorage } from "./client";
-import type { ApiUser } from "./types";
+import type { ApiUser, ApiWorkerCard } from "./types";
 
 export type OtpPurpose = "register" | "login" | "forgot_password";
 
@@ -99,4 +99,55 @@ export async function deleteProfile() {
 
 export function logout() {
   tokenStorage.clear();
+}
+
+export async function listFavoriteWorkers() {
+  const res = await api.get<ApiWorkerCard[]>("/auth/me/favorites");
+  return res.data;
+}
+
+export async function addFavoriteWorker(workerId: string) {
+  const res = await api.post<{ message: string }>(`/auth/me/favorites/${workerId}`);
+  return res.data;
+}
+
+export async function removeFavoriteWorker(workerId: string) {
+  const res = await api.del<{ message: string }>(`/auth/me/favorites/${workerId}`);
+  return res.data;
+}
+
+export interface ApiAddress {
+  id: string;
+  label: string;
+  address: string;
+}
+
+interface AddressListResponse {
+  addresses: ApiAddress[];
+  currentAddressId: string | null;
+}
+
+export async function listAddresses() {
+  const res = await api.get<AddressListResponse>("/auth/me/addresses");
+  return res.data;
+}
+
+export async function addAddress(input: { label: string; address: string }) {
+  const res = await api.post<AddressListResponse>("/auth/me/addresses", input);
+  return res.data;
+}
+
+export async function updateAddress(id: string, input: { label?: string; address?: string }) {
+  const res = await api.patch<AddressListResponse>(`/auth/me/addresses/${id}`, input);
+  return res.data;
+}
+
+export async function deleteAddress(id: string) {
+  const res = await api.del<AddressListResponse>(`/auth/me/addresses/${id}`);
+  return res.data;
+}
+
+export async function setCurrentAddress(id: string) {
+  const res = await api.patch<AddressListResponse>(`/auth/me/addresses/${id}/current`);
+  return res.data;
 }

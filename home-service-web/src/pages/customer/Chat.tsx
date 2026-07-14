@@ -148,15 +148,15 @@ export default function Chat() {
     );
   }
 
-  const customerName = typeof booking?.customer === "object" ? booking.customer.name : "Customer";
-  const workerName = typeof booking?.worker === "object" ? booking.worker.user?.name : "Worker";
+  const customerName = booking?.customer && typeof booking.customer === "object" ? booking.customer.name : "Customer";
+  const workerName = booking?.worker && typeof booking.worker === "object" ? booking.worker.user?.name : "Worker";
   const isWorkerView = currentUser?.role === "worker";
   const peerName = (isWorkerView ? customerName : workerName) ?? "Chat";
   const peerPhone = isWorkerView
-    ? typeof booking?.customer === "object"
+    ? booking?.customer && typeof booking.customer === "object"
       ? booking.customer.phone
       : undefined
-    : typeof booking?.worker === "object" && booking.worker.user && "phone" in booking.worker.user
+    : booking?.worker && typeof booking.worker === "object" && booking.worker.user && "phone" in booking.worker.user
       ? (booking.worker.user as { phone?: string }).phone
       : undefined;
 
@@ -184,7 +184,7 @@ export default function Chat() {
 
       <div className="flex-1 space-y-3 overflow-y-auto p-4 pb-24 scrollbar-thin">
         {messages.map((m) => {
-          const senderId = typeof m.sender === "object" ? m.sender.id : m.sender;
+          const senderId = m.sender && typeof m.sender === "object" ? m.sender.id : m.sender;
           const mine = senderId === currentUser?.id;
           return (
             <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
@@ -212,7 +212,7 @@ export default function Chat() {
         <div ref={scrollRef} />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 mx-auto flex max-w-md items-center gap-2 border-t border-border bg-white p-3">
+      <div className="fixed bottom-0 left-0 right-0 mx-auto flex max-w-md items-center gap-2 border-t border-border bg-card p-3">
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}

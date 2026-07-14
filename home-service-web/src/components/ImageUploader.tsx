@@ -47,7 +47,7 @@ export default function ImageUploader({ type, value, onChange, max = 6, label }:
             <button
               type="button"
               onClick={() => remove(url)}
-              className="absolute right-0.5 top-0.5 rounded-full bg-ink/70 p-0.5 text-white"
+              className="absolute right-0.5 top-0.5 rounded-full bg-sidebar/70 p-0.5 text-white"
               aria-label="Remove image"
             >
               <X size={12} />

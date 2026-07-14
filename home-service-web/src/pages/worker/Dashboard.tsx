@@ -106,8 +106,8 @@ export default function WorkerDashboard() {
           <p className="py-6 text-center text-sm text-ink-muted">No active jobs right now.</p>
         )}
         {todayJobs.map((j) => {
-          const customerName = typeof j.customer === "object" ? j.customer.name : "Customer";
-          const categoryName = typeof j.category === "object" ? j.category.name : "";
+          const customerName = j.customer && typeof j.customer === "object" ? j.customer.name : "Customer";
+          const categoryName = j.category && typeof j.category === "object" ? j.category.name : "";
           return (
             <Card key={j.id} className="flex items-center justify-between">
               <div>
@@ -189,7 +189,7 @@ function WorkerOnboardingForm({ onDone }: { onDone: () => void }) {
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full rounded-xl border border-border bg-white px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             required
           >
             <option value="">Select a category</option>

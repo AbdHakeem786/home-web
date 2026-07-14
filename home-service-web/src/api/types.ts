@@ -82,6 +82,8 @@ export interface ApiBooking {
   description: string;
   estimatedPrice: number;
   finalPrice?: number;
+  couponCode?: string;
+  discountAmount?: number;
   cancelReason?: string;
   cancellationFee?: number;
   refundAmount?: number;

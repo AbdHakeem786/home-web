@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Banknote, CreditCard, Check } from "lucide-react";
+import { Banknote, CreditCard, Check, Tag, X } from "lucide-react";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import TopBar from "../../components/ui/TopBar";
 import Button from "../../components/ui/Button";
+import Input from "../../components/ui/Input";
 import { cn, formatPKR } from "../../lib/utils";
 import { stripePromise } from "../../lib/stripe";
-import { bookingsApi, ApiError } from "../../api";
+import { bookingsApi, couponsApi, ApiError, type ApiCouponPreview } from "../../api";
 
 const methods = [
   { id: "cash", label: "Cash on completion", icon: Banknote },
@@ -77,7 +78,35 @@ export default function BookingPayment() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [stripeBooking, setStripeBooking] = useState<{ id: string; clientSecret: string } | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<ApiCouponPreview | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const price = state?.estimatedPrice ?? 0;
+  const discount = coupon?.discount ?? 0;
+  const payableTotal = Math.max(0, price - discount);
+
+  async function applyCoupon() {
+    const code = couponInput.trim();
+    if (!code) return;
+    setApplyingCoupon(true);
+    setCouponError("");
+    try {
+      const preview = await couponsApi.validateCoupon(code, price);
+      setCoupon(preview);
+    } catch (err) {
+      setCoupon(null);
+      setCouponError(err instanceof ApiError ? err.message : "Could not apply this code.");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  }
+
+  function removeCoupon() {
+    setCoupon(null);
+    setCouponInput("");
+    setCouponError("");
+  }
 
   async function handleConfirmCash() {
     if (!state) {
@@ -97,6 +126,7 @@ export default function BookingPayment() {
         estimatedPrice: state.estimatedPrice,
         problemImages: state.problemImages,
         paymentMethod: "cash",
+        couponCode: coupon?.code,
       });
       navigate(`/booking/${state.workerId}/track`, { state: { bookingId: booking.id } });
     } catch (err) {
@@ -124,6 +154,7 @@ export default function BookingPayment() {
         estimatedPrice: state.estimatedPrice,
         problemImages: state.problemImages,
         paymentMethod: "stripe",
+        couponCode: coupon?.code,
       });
       const { clientSecret } = await bookingsApi.createPaymentIntent(booking.id);
       setStripeBooking({ id: booking.id, clientSecret });
@@ -145,11 +176,49 @@ export default function BookingPayment() {
 
         <div className="rounded-2xl border border-border p-4">
           <p className="text-sm text-ink-muted">Estimated total</p>
-          <p className="font-mono text-2xl font-bold text-ink">{formatPKR(price)}</p>
+          {discount > 0 ? (
+            <div className="flex items-baseline gap-2">
+              <p className="font-mono text-2xl font-bold text-ink">{formatPKR(payableTotal)}</p>
+              <p className="font-mono text-sm text-ink-muted line-through">{formatPKR(price)}</p>
+            </div>
+          ) : (
+            <p className="font-mono text-2xl font-bold text-ink">{formatPKR(price)}</p>
+          )}
+          {coupon && <p className="mt-1 text-xs font-medium text-success">You saved {formatPKR(discount)} with {coupon.code}</p>}
           <p className="mt-1 text-xs text-ink-muted">
             Final amount confirmed by the worker after inspecting the job.
           </p>
         </div>
+
+        {!stripeBooking && (
+          <div className="mt-4">
+            {coupon ? (
+              <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success-light px-3.5 py-3">
+                <Tag size={16} className="text-success" />
+                <span className="flex-1 text-sm font-medium text-success">{coupon.code} applied</span>
+                <button type="button" onClick={removeCoupon} aria-label="Remove promo code" className="text-success">
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2">
+                <div className="flex-1">
+                  <Input
+                    id="couponCode"
+                    placeholder="Promo code"
+                    icon={<Tag size={16} />}
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    error={couponError}
+                  />
+                </div>
+                <Button variant="outline" disabled={applyingCoupon || !couponInput.trim()} onClick={applyCoupon}>
+                  {applyingCoupon ? "..." : "Apply"}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
 
         {!stripeBooking && (
           <>

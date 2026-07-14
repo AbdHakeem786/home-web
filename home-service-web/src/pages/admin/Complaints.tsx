@@ -46,9 +46,9 @@ export default function AdminComplaints() {
       {error && <p className="mb-4 rounded-xl bg-danger-light px-3 py-2.5 text-sm text-danger">{error}</p>}
       <div className="flex flex-col gap-2.5">
         {complaints.map((c) => {
-          const from = typeof c.raisedBy === "object" ? c.raisedBy.name : "User";
+          const from = c.raisedBy && typeof c.raisedBy === "object" ? c.raisedBy.name : "User";
           return (
-            <div key={c.id} className="rounded-2xl border border-border bg-white p-3.5">
+            <div key={c.id} className="rounded-2xl border border-border bg-card p-3.5">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-ink">{from} — {c.subject}</p>
                 <Badge tone={tone[c.status]}>{c.status.replaceAll("_", " ")}</Badge>

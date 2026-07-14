@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dev-only: allows plain HTTP to the local backend so the app can reach it
+  while it isn't served over HTTPS yet. Remove this once the API has a real
+  HTTPS domain and point capacitor.config.ts / .env.mobile at that instead.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">192.168.100.67</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

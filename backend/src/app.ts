@@ -19,6 +19,7 @@ import complaintRoutes from "./routes/complaintRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 import messageRoutes from "./routes/messageRoutes";
+import couponRoutes from "./routes/couponRoutes";
 import { stripeWebhook } from "./controllers/webhookController";
 
 export function createApp(): Application {
@@ -74,6 +75,7 @@ export function createApp(): Application {
   app.use("/api/admin", adminRoutes);
   app.use("/api/uploads", uploadRoutes);
   app.use("/api/messages", messageRoutes);
+  app.use("/api/coupons", couponRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

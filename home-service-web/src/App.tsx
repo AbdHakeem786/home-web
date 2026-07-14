@@ -26,6 +26,8 @@ import Chat from "./pages/customer/Chat";
 import Notifications from "./pages/customer/Notifications";
 import Profile from "./pages/customer/Profile";
 import BookingHistory from "./pages/customer/BookingHistory";
+import Favorites from "./pages/customer/Favorites";
+import Addresses from "./pages/customer/Addresses";
 
 import WorkerDashboard from "./pages/worker/Dashboard";
 import WorkerJobs from "./pages/worker/Jobs";
@@ -36,6 +38,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminWorkers from "./pages/admin/Workers";
 import AdminBookings from "./pages/admin/Bookings";
 import AdminCategories from "./pages/admin/Categories";
+import AdminCoupons from "./pages/admin/Coupons";
 import AdminComplaints from "./pages/admin/Complaints";
 import AdminWithdrawals from "./pages/admin/Withdrawals";
 
@@ -95,6 +98,8 @@ export default function App() {
               <Route path="/booking/:workerId/track" element={<LiveTracking />} />
               <Route path="/chat/:bookingId" element={<Chat />} />
               <Route path="/bookings" element={<BookingHistory />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/addresses" element={<Addresses />} />
             </Route>
 
             <Route
@@ -122,6 +127,7 @@ export default function App() {
               <Route path="/admin/workers" element={<AdminWorkers />} />
               <Route path="/admin/bookings" element={<AdminBookings />} />
               <Route path="/admin/categories" element={<AdminCategories />} />
+              <Route path="/admin/coupons" element={<AdminCoupons />} />
               <Route path="/admin/complaints" element={<AdminComplaints />} />
               <Route path="/admin/withdrawals" element={<AdminWithdrawals />} />
             </Route>

@@ -124,7 +124,7 @@ export default function LiveTracking() {
         ) : (
           <>
             <LiveMap lat={position.lat} lng={position.lng} />
-            <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-ink shadow">
+            <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-card px-3 py-1.5 text-xs font-semibold text-ink shadow">
               {isCompleted ? "Arrived" : "Live location"}
             </div>
           </>
@@ -139,7 +139,7 @@ export default function LiveTracking() {
           <div className="flex-1">
             <p className="text-sm font-medium text-ink">{workerName}</p>
             <p className="text-xs text-ink-muted capitalize">
-              {typeof booking.category === "object" ? booking.category.name : ""}
+              {booking.category && typeof booking.category === "object" ? booking.category.name : ""}
             </p>
           </div>
           {workerPhone && (

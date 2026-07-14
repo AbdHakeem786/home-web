@@ -81,7 +81,9 @@ export async function listWorkersAdmin(req: Request, res: Response): Promise<voi
       .limit(limit),
   ]);
 
-  paginated(res, workers, page, limit, total);
+  const validWorkers = workers.filter((w) => w.user != null);
+
+  paginated(res, validWorkers, page, limit, total - (workers.length - validWorkers.length));
 }
 
 export async function listWithdrawals(req: Request, res: Response): Promise<void> {

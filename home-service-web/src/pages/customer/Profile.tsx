@@ -1,13 +1,15 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, MapPin, Clock, CreditCard, LogOut, ChevronRight, Camera, Loader2, Trash2 } from "lucide-react";
+import { User, MapPin, Heart, Clock, CreditCard, LogOut, ChevronRight, Camera, Loader2, Trash2 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { authApi, uploadsApi, resolveUploadUrl, ApiError } from "../../api";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
+import ThemeToggle from "../../components/ui/ThemeToggle";
 
 const items = [
-  { icon: MapPin, label: "Saved addresses", to: "#" },
+  { icon: Heart, label: "Saved workers", to: "/favorites" },
+  { icon: MapPin, label: "Saved addresses", to: "/addresses" },
   { icon: Clock, label: "Booking history", to: "/bookings" },
   { icon: CreditCard, label: "Payment methods", to: "#" },
 ];
@@ -142,6 +144,8 @@ export default function Profile() {
           </Link>
         ))}
       </div>
+
+      <ThemeToggle className="mt-3 w-full justify-center" />
 
       <button
         onClick={() => {

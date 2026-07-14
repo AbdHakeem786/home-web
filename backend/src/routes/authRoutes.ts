@@ -14,6 +14,8 @@ import {
   verifyEmailSchema,
   resendVerificationEmailSchema,
   googleLoginSchema,
+  addAddressSchema,
+  updateAddressSchema,
 } from "../validators/authValidators";
 import * as authController from "../controllers/authController";
 
@@ -46,5 +48,13 @@ router.post("/refresh", validate(refreshTokenSchema), authController.refresh);
 router.get("/me", requireAuth, authController.me);
 router.put("/profile", requireAuth, validate(updateProfileSchema), authController.updateProfile);
 router.delete("/profile", requireAuth, authController.deleteProfile);
+router.get("/me/favorites", requireAuth, authController.listFavoriteWorkers);
+router.post("/me/favorites/:workerId", requireAuth, authController.addFavoriteWorker);
+router.delete("/me/favorites/:workerId", requireAuth, authController.removeFavoriteWorker);
+router.get("/me/addresses", requireAuth, authController.listAddresses);
+router.post("/me/addresses", requireAuth, validate(addAddressSchema), authController.addAddress);
+router.patch("/me/addresses/:id", requireAuth, validate(updateAddressSchema), authController.updateAddress);
+router.delete("/me/addresses/:id", requireAuth, authController.deleteAddress);
+router.patch("/me/addresses/:id/current", requireAuth, authController.setCurrentAddress);
 
 export default router;

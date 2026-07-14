@@ -4,8 +4,7 @@ import { Search, MapPin, Bell, ChevronRight, Gift } from "lucide-react";
 import CategoryTile from "../../components/CategoryTile";
 import WorkerCard from "../../components/WorkerCard";
 import { useAppStore } from "../../store/appStore";
-import { useGeolocation } from "../../hooks/useGeolocation";
-import { categoriesApi, workersApi, notificationsApi, type ApiCategory, type ApiWorkerCard } from "../../api";
+import { authApi, categoriesApi, workersApi, notificationsApi, type ApiCategory, type ApiWorkerCard } from "../../api";
 
 export default function Home() {
   const userName = useAppStore((s) => s.user?.name ?? "there");
@@ -13,7 +12,7 @@ export default function Home() {
   const [nearby, setNearby] = useState<ApiWorkerCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
-  const position = useGeolocation();
+  const [currentAddress, setCurrentAddress] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,35 +30,29 @@ export default function Home() {
       .listMyNotifications()
       .then(({ unreadCount }) => !cancelled && setUnreadCount(unreadCount))
       .catch(() => undefined);
+    authApi
+      .listAddresses()
+      .then(({ addresses, currentAddressId }) => {
+        if (cancelled) return;
+        const current = addresses.find((a) => a.id === currentAddressId);
+        setCurrentAddress(current?.address ?? null);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Progressive enhancement: once the browser's geolocation resolves, re-fetch
-  // the featured workers sorted by actual distance instead of just rating.
-  useEffect(() => {
-    if (!position) return;
-    let cancelled = false;
-    workersApi
-      .listWorkers({ online: true, verified: true, limit: 3, sort: "distance", lat: position.lat, lng: position.lng })
-      .then(({ workers }) => !cancelled && setNearby(workers))
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [position]);
-
   return (
     <div>
       <div className="bg-primary px-4 pb-6 pt-5 text-white">
         <div className="flex items-center justify-between">
-          <div>
+          <Link to="/addresses" className="min-w-0">
             <div className="flex items-center gap-1 text-xs text-white/70">
               <MapPin size={12} /> Current location
             </div>
-            <p className="text-sm font-medium">F-10 Markaz, Islamabad</p>
-          </div>
+            <p className="truncate text-sm font-medium">{currentAddress ?? "Set your location"}</p>
+          </Link>
           <Link to="/notifications" className="relative rounded-full bg-white/15 p-2">
             <Bell size={18} />
             {unreadCount > 0 && (
@@ -74,7 +67,7 @@ export default function Home() {
 
         <Link
           to="/workers/all"
-          className="mt-4 flex items-center gap-2 rounded-xl bg-white px-3.5 py-3 text-ink-muted"
+          className="mt-4 flex items-center gap-2 rounded-xl bg-card px-3.5 py-3 text-ink-muted"
         >
           <Search size={16} />
           <span className="text-sm">Search plumber, electrician, cleaner...</span>
@@ -82,8 +75,8 @@ export default function Home() {
       </div>
 
       <div className="px-4">
-        <div className="-mt-3 mb-5 flex items-center gap-3 rounded-2xl border border-border bg-white p-3.5 shadow-sm">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning-light text-[#92620A]">
+        <div className="-mt-3 mb-5 flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-sm">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning-light text-warning-ink">
             <Gift size={18} />
           </span>
           <div className="min-w-0 flex-1">

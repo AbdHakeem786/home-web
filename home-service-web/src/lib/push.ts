@@ -7,9 +7,16 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
+let inFlight: Promise<void> | null = null;
+
 /** Best-effort: registers the SW and subscribes to push. Silently no-ops if
  * unsupported, permission is denied, or no VAPID key is configured server-side. */
-export async function enablePushNotifications(): Promise<void> {
+export function enablePushNotifications(): Promise<void> {
+  if (!inFlight) inFlight = doEnablePushNotifications().finally(() => (inFlight = null));
+  return inFlight;
+}
+
+async function doEnablePushNotifications(): Promise<void> {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
   try {

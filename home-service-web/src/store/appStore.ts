@@ -3,6 +3,7 @@ import type { UserRole } from "../types";
 import { tokenStorage } from "../api/client";
 import { disconnectSocket } from "../api/socket";
 import type { ApiUser } from "../api/types";
+import { useFavoritesStore } from "./favoritesStore";
 
 interface AppState {
   role: UserRole;
@@ -32,6 +33,7 @@ export const useAppStore = create<AppState>((set) => ({
   logout: () => {
     tokenStorage.clear();
     disconnectSocket();
+    useFavoritesStore.setState({ ids: new Set(), loaded: false });
     set({ user: null, isAuthenticated: false });
   },
 }));
@@ -40,3 +42,10 @@ export const useAppStore = create<AppState>((set) => ({
 export function useUserName(): string {
   return useAppStore((s) => s.user?.name ?? "there");
 }
+
+// client.ts clears localStorage itself when a 401 survives a refresh attempt, but
+// it has no reference to this store. Without this, isAuthenticated stays true in
+// memory and every route keeps rendering while every request silently 401s.
+window.addEventListener("rmh:session-expired", () => {
+  useAppStore.getState().logout();
+});

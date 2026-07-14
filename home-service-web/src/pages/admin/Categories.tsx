@@ -59,7 +59,7 @@ export default function AdminCategories() {
         {categories.map((c) => {
           const Icon = (Icons as any)[c.icon] || Icons.Wrench;
           return (
-            <div key={c.id} className="flex items-center gap-2.5 rounded-xl border border-border bg-white p-3">
+            <div key={c.id} className="flex items-center gap-2.5 rounded-xl border border-border bg-card p-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-light text-primary">
                 <Icon size={16} />
               </span>

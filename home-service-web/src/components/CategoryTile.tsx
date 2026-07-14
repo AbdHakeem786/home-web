@@ -7,7 +7,7 @@ export default function CategoryTile({ category }: { category: Category }) {
   return (
     <Link
       to={`/workers/${category.id}`}
-      className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-white p-3 text-center transition-colors hover:border-primary hover:bg-primary-light/40"
+      className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-3 text-center transition-colors hover:border-primary hover:bg-primary-light/40"
     >
       <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-light text-primary">
         <Icon size={20} />

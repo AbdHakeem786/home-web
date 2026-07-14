@@ -1,4 +1,5 @@
 export * as authApi from "./auth";
+export type { ApiAddress } from "./auth";
 export * as categoriesApi from "./categories";
 export * as workersApi from "./workers";
 export * as bookingsApi from "./bookings";
@@ -9,6 +10,8 @@ export * as complaintsApi from "./complaints";
 export * as adminApi from "./admin";
 export type { DashboardStats, AnalyticsResponse } from "./admin";
 export * as messagesApi from "./messages";
+export * as couponsApi from "./coupons";
+export type { ApiCouponPreview, ApiCoupon } from "./coupons";
 export * as uploadsApi from "./uploads";
 export type { UploadType } from "./uploads";
 export * from "./types";

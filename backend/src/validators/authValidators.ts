@@ -12,6 +12,7 @@ export const registerSchema = z.object({
     password: z.string().min(6).max(100),
     role: z.enum(["customer", "worker"]).optional().default("customer"),
     email: z.string().trim().email("A valid email is required to verify your account"),
+    referralCode: z.string().trim().min(1).optional(),
   }),
 });
 
@@ -80,5 +81,19 @@ export const updateProfileSchema = z.object({
     name: z.string().trim().min(2).max(100).optional(),
     email: z.string().trim().email().optional(),
     avatar: z.string().optional(),
+  }),
+});
+
+export const addAddressSchema = z.object({
+  body: z.object({
+    label: z.string().trim().min(1).max(30),
+    address: z.string().trim().min(3).max(300),
+  }),
+});
+
+export const updateAddressSchema = z.object({
+  body: z.object({
+    label: z.string().trim().min(1).max(30).optional(),
+    address: z.string().trim().min(3).max(300).optional(),
   }),
 });

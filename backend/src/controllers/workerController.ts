@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import { WorkerProfile } from "../models/WorkerProfile";
+import { WorkerProfile, IAvailabilitySlot } from "../models/WorkerProfile";
 import { Review } from "../models/Review";
 import { Category } from "../models/Category";
 import { AppError } from "../utils/AppError";
 import { ok, created, paginated } from "../utils/apiResponse";
 import { getIO } from "../realtime/socket";
 import { escapeRegex } from "../utils/regex";
+import { initials } from "../utils/initials";
 
 export async function listWorkers(req: Request, res: Response): Promise<void> {
   const { category, online, verified, minRating, search, lat, lng, sort } = req.query as Record<string, string>;
@@ -31,34 +32,26 @@ export async function listWorkers(req: Request, res: Response): Promise<void> {
   if (verified !== undefined) match.verified = verified === "true";
   if (minRating !== undefined) match.rating = { $gte: Number(minRating) };
 
-  const pipeline: mongoose.PipelineStage[] = [];
-
-  if (lat !== undefined && lng !== undefined) {
-    pipeline.push({
-      $geoNear: {
-        near: { type: "Point", coordinates: [Number(lng), Number(lat)] },
-        distanceField: "distanceMeters",
-        spherical: true,
-        query: match,
-      },
-    });
-  } else {
-    pipeline.push({ $match: match });
-  }
-
-  pipeline.push(
+  const lookups: mongoose.PipelineStage[] = [
     { $lookup: { from: "users", localField: "user", foreignField: "_id", as: "user" } },
     { $unwind: "$user" },
     { $lookup: { from: "categories", localField: "category", foreignField: "_id", as: "category" } },
-    { $unwind: "$category" }
-  );
-
-  if (search) {
-    const re = new RegExp(escapeRegex(search), "i");
-    pipeline.push({
-      $match: { $or: [{ "user.name": re }, { "category.name": re }, { skills: re }, { bio: re }] },
-    });
-  }
+    { $unwind: "$category" },
+  ];
+  const searchMatch: mongoose.PipelineStage[] = search
+    ? [
+        {
+          $match: {
+            $or: [
+              { "user.name": new RegExp(escapeRegex(search), "i") },
+              { "category.name": new RegExp(escapeRegex(search), "i") },
+              { skills: new RegExp(escapeRegex(search), "i") },
+              { bio: new RegExp(escapeRegex(search), "i") },
+            ],
+          },
+        },
+      ]
+    : [];
 
   const sortStage: Record<string, 1 | -1> =
     sort === "rating"
@@ -70,16 +63,64 @@ export async function listWorkers(req: Request, res: Response): Promise<void> {
       : lat !== undefined && lng !== undefined
       ? { distanceMeters: 1 }
       : { createdAt: -1 };
-  pipeline.push({ $sort: sortStage });
 
-  const countPipeline = [...pipeline, { $count: "total" }];
-  const dataPipeline = [...pipeline, { $skip: (page - 1) * limit }, { $limit: limit }];
+  let workers: mongoose.AnyObject[];
+  let total: number;
 
-  const [countResult, workers] = await Promise.all([
-    WorkerProfile.aggregate(countPipeline),
-    WorkerProfile.aggregate(dataPipeline),
-  ]);
-  const total = countResult[0]?.total ?? 0;
+  if (lat !== undefined && lng !== undefined) {
+    // $geoNear silently excludes documents without a location field (that's how the
+    // 2dsphere index works) - most workers never share GPS coordinates, so a plain
+    // geoNear pipeline would make them flicker in and out as soon as the customer's
+    // browser resolves its position. Run distance-sort and no-location workers as two
+    // branches and merge, so everyone still shows up (just without a distance badge).
+    const withLocationPipeline: mongoose.PipelineStage[] = [
+      {
+        $geoNear: {
+          near: { type: "Point", coordinates: [Number(lng), Number(lat)] },
+          distanceField: "distanceMeters",
+          spherical: true,
+          query: match,
+        },
+      },
+      ...lookups,
+      ...searchMatch,
+      { $sort: sortStage },
+    ];
+    const noLocationMatch = {
+      ...match,
+      $or: [
+        { location: { $exists: false } },
+        { "location.coordinates": { $exists: false } },
+        { "location.coordinates": { $size: 0 } },
+      ],
+    };
+    const fallbackSort = sortStage.distanceMeters ? { rating: -1 as const } : sortStage;
+    const withoutLocationPipeline: mongoose.PipelineStage[] = [
+      { $match: noLocationMatch },
+      ...lookups,
+      ...searchMatch,
+      { $sort: fallbackSort },
+    ];
+
+    const [withLocation, withoutLocation] = await Promise.all([
+      WorkerProfile.aggregate(withLocationPipeline),
+      WorkerProfile.aggregate(withoutLocationPipeline),
+    ]);
+    const combined = [...withLocation, ...withoutLocation];
+    total = combined.length;
+    workers = combined.slice((page - 1) * limit, (page - 1) * limit + limit);
+  } else {
+    const pipeline: mongoose.PipelineStage[] = [{ $match: match }, ...lookups, ...searchMatch, { $sort: sortStage }];
+    const countPipeline = [...pipeline, { $count: "total" }];
+    const dataPipeline = [...pipeline, { $skip: (page - 1) * limit }, { $limit: limit }];
+
+    const [countResult, dataResult] = await Promise.all([
+      WorkerProfile.aggregate(countPipeline),
+      WorkerProfile.aggregate(dataPipeline),
+    ]);
+    total = countResult[0]?.total ?? 0;
+    workers = dataResult;
+  }
 
   const shaped = workers.map((w) => ({
     id: w._id.toString(),
@@ -99,15 +140,6 @@ export async function listWorkers(req: Request, res: Response): Promise<void> {
   }));
 
   paginated(res, shaped, page, limit, total);
-}
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 }
 
 export async function getWorkerProfile(req: Request, res: Response): Promise<void> {
@@ -201,6 +233,19 @@ export async function updateMyAvailability(req: Request, res: Response): Promise
   if (!profile) throw AppError.notFound("Worker profile not found");
 
   ok(res, { online: profile.online });
+}
+
+export async function updateMySchedule(req: Request, res: Response): Promise<void> {
+  const { schedule } = req.body as { schedule: IAvailabilitySlot[] };
+
+  const profile = await WorkerProfile.findOneAndUpdate(
+    { user: req.auth!.userId },
+    { schedule },
+    { new: true }
+  );
+  if (!profile) throw AppError.notFound("Worker profile not found");
+
+  ok(res, { schedule: profile.schedule });
 }
 
 export async function getMyWorkerProfile(req: Request, res: Response): Promise<void> {

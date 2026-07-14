@@ -46,7 +46,7 @@ export default function AdminWithdrawals() {
       {error && <p className="mb-4 rounded-xl bg-danger-light px-3 py-2.5 text-sm text-danger">{error}</p>}
       <div className="flex flex-col gap-2.5">
         {withdrawals.map((w) => (
-          <div key={w.id} className="rounded-2xl border border-border bg-white p-3.5">
+          <div key={w.id} className="rounded-2xl border border-border bg-card p-3.5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-ink">{w.worker?.user?.name ?? "Worker"}</p>
               <Badge tone={tone[w.status]}>{w.status}</Badge>

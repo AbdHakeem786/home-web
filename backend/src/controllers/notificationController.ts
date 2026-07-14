@@ -48,12 +48,21 @@ export function getVapidPublicKey(_req: Request, res: Response): void {
 
 export async function subscribePush(req: Request, res: Response): Promise<void> {
   const { endpoint, keys } = req.body as { endpoint: string; keys: { p256dh: string; auth: string } };
+  const update = { user: req.auth!.userId, endpoint, p256dh: keys.p256dh, auth: keys.auth };
 
-  await PushSubscription.findOneAndUpdate(
-    { endpoint, user: req.auth!.userId },
-    { user: req.auth!.userId, endpoint, p256dh: keys.p256dh, auth: keys.auth },
-    { upsert: true }
-  );
+  try {
+    await PushSubscription.findOneAndUpdate({ endpoint }, update, { upsert: true });
+  } catch (err) {
+    // Two concurrent subscribe calls for the same endpoint (e.g. a double-mounted
+    // effect in dev) can both miss the upsert's existence check and race on the
+    // unique index; the loser just needs a plain update, the doc now exists.
+    if (typeof err === "object" && err !== null && (err as { code?: number }).code === 11000) {
+      await PushSubscription.updateOne({ endpoint }, update);
+    } else {
+      throw err;
+    }
+  }
+
   ok(res, { message: "Subscribed to push notifications" });
 }
 

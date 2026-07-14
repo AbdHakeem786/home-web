@@ -4,7 +4,7 @@ import { cn } from "../../lib/utils";
 const tones: Record<string, string> = {
   primary: "bg-primary-light text-primary",
   success: "bg-success-light text-success",
-  warning: "bg-warning-light text-[#92620A]",
+  warning: "bg-warning-light text-warning-ink",
   danger: "bg-danger-light text-danger",
   neutral: "bg-surface text-ink-muted",
 };

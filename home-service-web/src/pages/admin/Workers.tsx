@@ -42,13 +42,13 @@ export default function AdminWorkers() {
       <h1 className="mb-5 font-display text-xl font-bold text-ink">Workers</h1>
       {error && <p className="mb-4 rounded-xl bg-danger-light px-3 py-2.5 text-sm text-danger">{error}</p>}
       <div className="flex flex-col gap-2.5">
-        {workers.map((w) => {
+        {workers.filter((w) => w.user != null).map((w) => {
           const avatarUrl = isAvatarUrl(w.user.avatar) ? resolveUploadUrl(w.user.avatar) : null;
           const initials = w.user.name.slice(0, 2).toUpperCase();
           const hasDocs = Boolean(w.cnicImage) || (w.documents?.length ?? 0) > 0;
           const expanded = expandedId === w.id;
           return (
-            <div key={w.id} className="rounded-2xl border border-border bg-white p-3.5">
+            <div key={w.id} className="rounded-2xl border border-border bg-card p-3.5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-primary-light font-display text-sm font-semibold text-primary">

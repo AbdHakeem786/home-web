@@ -56,7 +56,7 @@ export default function AdminBookings() {
     <div>
       <h1 className="mb-5 font-display text-xl font-bold text-ink">Bookings</h1>
       {error && <p className="mb-4 rounded-xl bg-danger-light px-3 py-2.5 text-sm text-danger">{error}</p>}
-      <div className="overflow-x-auto rounded-2xl border border-border bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-border text-xs text-ink-muted">
             <tr>
@@ -70,7 +70,7 @@ export default function AdminBookings() {
           </thead>
           <tbody className="divide-y divide-border">
             {bookings.map((b) => {
-              const workerName = typeof b.worker === "object" ? b.worker.user?.name : b.worker;
+              const workerName = b.worker && typeof b.worker === "object" ? b.worker.user?.name : b.worker || "Unassigned";
               const nextOptions = NEXT_STATUSES[b.status];
               return (
                 <tr key={b.id}>

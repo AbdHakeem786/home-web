@@ -5,6 +5,7 @@ import { cn } from "../lib/utils";
 import { useAppStore } from "../store/appStore";
 import { connectSocket } from "../api";
 import { enablePushNotifications } from "../lib/push";
+import ThemeToggle from "../components/ui/ThemeToggle";
 
 const items = [
   { to: "/worker/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -25,7 +26,7 @@ export default function WorkerLayout() {
 
   return (
     <div className="min-h-screen bg-surface-alt md:flex">
-      <aside className="border-b border-border bg-white p-4 md:h-screen md:w-56 md:border-b-0 md:border-r">
+      <aside className="border-b border-border bg-card p-4 md:h-screen md:w-56 md:border-b-0 md:border-r">
         <div className="mb-6 flex items-center gap-2 px-1">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-display text-sm font-bold text-white">
             {initials}
@@ -52,12 +53,13 @@ export default function WorkerLayout() {
             </NavLink>
           ))}
         </nav>
+        <ThemeToggle className="mt-4 hidden w-full justify-center md:flex" />
         <button
           onClick={() => {
             logout();
             navigate("/login");
           }}
-          className="mt-4 hidden w-full items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-medium text-ink-muted hover:text-danger md:flex"
+          className="mt-2 hidden w-full items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-medium text-ink-muted hover:text-danger md:flex"
         >
           <LogOut size={14} /> Log out
         </button>
