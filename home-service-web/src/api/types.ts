@@ -84,6 +84,7 @@ export interface ApiBooking {
   finalPrice?: number;
   couponCode?: string;
   discountAmount?: number;
+  walletAmount?: number;
   cancelReason?: string;
   cancellationFee?: number;
   refundAmount?: number;
@@ -123,6 +124,15 @@ export interface ApiWalletTransaction {
   status: "pending" | "completed" | "rejected";
   accountDetails?: string;
   worker?: { id?: string; user?: { name: string; phone?: string } };
+  createdAt: string;
+}
+
+export interface ApiCustomerWalletTransaction {
+  id: string;
+  label: string;
+  amount: number;
+  type: "credit" | "debit";
+  booking?: string;
   createdAt: string;
 }
 

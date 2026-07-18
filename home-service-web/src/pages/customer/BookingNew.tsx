@@ -71,7 +71,7 @@ export default function BookingNew() {
         }}
         className="flex flex-col gap-4 p-4"
       >
-        <div className="flex items-center gap-3 rounded-xl border border-border p-3">
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-card">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-primary-light font-display text-sm font-semibold text-primary">
             {avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : initials}
           </div>
@@ -119,7 +119,7 @@ export default function BookingNew() {
             id="description"
             rows={4}
             placeholder="Describe the issue so the worker comes prepared..."
-            className="w-full rounded-xl border border-border p-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="w-full rounded-xl border border-border bg-card p-3 text-sm text-ink outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
@@ -134,8 +134,8 @@ export default function BookingNew() {
           label="Photos of the issue (optional)"
         />
 
-        <div className="mt-1 flex items-center justify-between rounded-xl bg-primary-light px-3.5 py-3">
-          <span className="text-sm text-primary">Estimated price</span>
+        <div className="mt-1 flex items-center justify-between rounded-xl border border-primary/15 bg-primary-light px-3.5 py-3 shadow-card">
+          <span className="text-sm font-medium text-primary">Estimated price</span>
           <span className="font-mono text-base font-semibold text-primary">{formatPKR(estimatedPrice)}</span>
         </div>
 

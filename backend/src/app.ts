@@ -14,6 +14,7 @@ import workerRoutes from "./routes/workerRoutes";
 import bookingRoutes from "./routes/bookingRoutes";
 import reviewRoutes from "./routes/reviewRoutes";
 import walletRoutes from "./routes/walletRoutes";
+import customerWalletRoutes from "./routes/customerWalletRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import complaintRoutes from "./routes/complaintRoutes";
 import adminRoutes from "./routes/adminRoutes";
@@ -70,6 +71,7 @@ export function createApp(): Application {
   app.use("/api/bookings", bookingRoutes);
   app.use("/api/reviews", reviewRoutes);
   app.use("/api/wallet", walletRoutes);
+  app.use("/api/customer-wallet", customerWalletRoutes);
   app.use("/api/notifications", notificationRoutes);
   app.use("/api/complaints", complaintRoutes);
   app.use("/api/admin", adminRoutes);

@@ -29,6 +29,10 @@
   /* Fixed brand-dark surface (admin nav rail): intentionally stays dark
      in both themes, unlike --color-ink which flips for text contrast. */
   --color-sidebar: #16121F;
+
+  --shadow-card: 0 1px 2px rgba(22, 18, 31, 0.04), 0 12px 24px -16px rgba(22, 18, 31, 0.18);
+  --shadow-card-hover: 0 2px 4px rgba(22, 18, 31, 0.05), 0 16px 32px -14px rgba(22, 18, 31, 0.22);
+  --shadow-button: 0 6px 16px -6px rgba(108, 59, 255, 0.4);
 }
 
 /* Dark theme: same semantic tokens, repointed to a dark palette.
@@ -51,6 +55,10 @@
   --color-warning-ink: #FCD34D;
   --color-danger: #FB7185;
   --color-danger-light: #3A1620;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.16), 0 12px 24px -16px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.2), 0 16px 32px -14px rgba(0, 0, 0, 0.55);
+  --shadow-button: 0 6px 18px -6px rgba(139, 107, 255, 0.45);
 }
 
 html, body, #root {
@@ -131,6 +139,19 @@ body {
 }
 .pulse-ring {
   animation: pulse-ring 1.8s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.2, 0.6, 0.4, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

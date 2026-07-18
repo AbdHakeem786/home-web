@@ -45,37 +45,41 @@ export default function Home() {
 
   return (
     <div>
-      <div className="bg-primary px-4 pb-6 pt-5 text-white">
-        <div className="flex items-center justify-between">
-          <Link to="/addresses" className="min-w-0">
-            <div className="flex items-center gap-1 text-xs text-white/70">
-              <MapPin size={12} /> Current location
-            </div>
-            <p className="truncate text-sm font-medium">{currentAddress ?? "Set your location"}</p>
-          </Link>
-          <Link to="/notifications" className="relative rounded-full bg-white/15 p-2">
-            <Bell size={18} />
-            {unreadCount > 0 && (
-              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-warning" />
-            )}
+      <div className="relative overflow-hidden bg-linear-to-br from-primary to-primary-dark px-4 pb-6 pt-5 text-white">
+        <div className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -left-16 bottom-0 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative">
+          <div className="flex items-center justify-between">
+            <Link to="/addresses" className="min-w-0">
+              <div className="flex items-center gap-1 text-xs text-white/70">
+                <MapPin size={12} /> Current location
+              </div>
+              <p className="truncate text-sm font-medium">{currentAddress ?? "Set your location"}</p>
+            </Link>
+            <Link to="/notifications" className="relative rounded-full bg-white/15 p-2">
+              <Bell size={18} />
+              {unreadCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-warning" />
+              )}
+            </Link>
+          </div>
+          <p className="mt-4 font-display text-lg font-semibold">
+            Assalam-o-Alaikum, {userName} 👋
+          </p>
+          <p className="text-sm text-white/70">What do you need help with today?</p>
+
+          <Link
+            to="/workers/all"
+            className="mt-4 flex items-center gap-2 rounded-xl bg-card px-3.5 py-3 text-ink-muted"
+          >
+            <Search size={16} />
+            <span className="text-sm">Search plumber, electrician, cleaner...</span>
           </Link>
         </div>
-        <p className="mt-4 font-display text-lg font-semibold">
-          Assalam-o-Alaikum, {userName} 👋
-        </p>
-        <p className="text-sm text-white/70">What do you need help with today?</p>
-
-        <Link
-          to="/workers/all"
-          className="mt-4 flex items-center gap-2 rounded-xl bg-card px-3.5 py-3 text-ink-muted"
-        >
-          <Search size={16} />
-          <span className="text-sm">Search plumber, electrician, cleaner...</span>
-        </Link>
       </div>
 
       <div className="px-4">
-        <div className="-mt-3 mb-5 flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-sm">
+        <div className="-mt-3 mb-5 flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-card">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning-light text-warning-ink">
             <Gift size={18} />
           </span>

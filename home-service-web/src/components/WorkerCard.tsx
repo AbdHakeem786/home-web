@@ -12,7 +12,7 @@ export default function WorkerCard({ worker }: { worker: Worker }) {
   const toggleFavorite = useFavoritesStore((s) => s.toggle);
 
   return (
-    <div className="relative flex gap-3 rounded-2xl border border-border bg-card p-3 transition-shadow hover:shadow-sm">
+    <div className="relative flex gap-3 rounded-2xl border border-border bg-card p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card">
       <Link to={`/worker/${worker.id}`} className="absolute inset-0 z-0" aria-label={worker.name} />
       <div className="relative z-10 h-14 w-14 flex-shrink-0">
         <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-primary-light font-display text-sm font-semibold text-primary">

@@ -13,6 +13,7 @@ export const createBookingSchema = z.object({
     problemImages: z.array(z.string()).max(6).optional().default([]),
     paymentMethod: z.enum(["cash", "stripe"]).optional().default("cash"),
     couponCode: z.string().trim().min(1).optional(),
+    walletAmount: z.coerce.number().min(0).optional().default(0),
   }),
 });
 

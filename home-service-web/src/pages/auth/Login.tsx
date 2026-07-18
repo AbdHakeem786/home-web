@@ -45,7 +45,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen flex-col justify-center px-6 py-10">
       <div className="mb-8 flex flex-col items-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-button">
           <Wrench size={24} />
         </div>
         <h1 className="mt-4 font-display text-xl font-bold text-ink">Welcome back</h1>

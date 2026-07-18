@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Booking } from "../models/Booking";
 import { WorkerProfile } from "../models/WorkerProfile";
 import { WalletTransaction } from "../models/WalletTransaction";
+import { CustomerWalletTransaction } from "../models/CustomerWalletTransaction";
 import { Coupon } from "../models/Coupon";
 import { User } from "../models/User";
 import { AppError } from "../utils/AppError";
@@ -61,6 +62,7 @@ export async function createBooking(req: Request, res: Response): Promise<void> 
     problemImages,
     paymentMethod,
     couponCode,
+    walletAmount,
   } = req.body;
 
   const worker = await WorkerProfile.findById(workerId);
@@ -80,6 +82,23 @@ export async function createBooking(req: Request, res: Response): Promise<void> 
     discountAmount = computeCouponDiscount(coupon, req.auth!.userId, estimatedPrice);
   }
 
+  // Reserve the wallet portion up front with an atomic conditional decrement (mirrors the
+  // withdrawal pattern) so two concurrent bookings can't both spend the same balance. Capped
+  // to what's actually still owed after the coupon discount, in case the client sent a stale amount.
+  let walletAmountUsed = 0;
+  const requestedWallet = Number(walletAmount) || 0;
+  if (requestedWallet > 0) {
+    const payableAfterCoupon = Math.max(0, estimatedPrice - discountAmount);
+    walletAmountUsed = Math.min(requestedWallet, payableAfterCoupon);
+    if (walletAmountUsed > 0) {
+      const debited = await User.findOneAndUpdate(
+        { _id: req.auth!.userId, walletBalance: { $gte: walletAmountUsed } },
+        { $inc: { walletBalance: -walletAmountUsed } }
+      );
+      if (!debited) throw AppError.badRequest("Insufficient wallet balance");
+    }
+  }
+
   const booking = await Booking.create({
     customer: req.auth!.userId,
     worker: workerId,
@@ -93,6 +112,7 @@ export async function createBooking(req: Request, res: Response): Promise<void> 
     paymentMethod: paymentMethod ?? "cash",
     couponCode: coupon?.code,
     discountAmount,
+    walletAmount: walletAmountUsed,
     status: "pending",
   });
 
@@ -100,6 +120,16 @@ export async function createBooking(req: Request, res: Response): Promise<void> 
     coupon.usedCount += 1;
     coupon.usedBy.push(req.auth!.userId as any);
     await coupon.save();
+  }
+
+  if (walletAmountUsed > 0) {
+    await CustomerWalletTransaction.create({
+      user: req.auth!.userId,
+      label: `Used on booking #${booking._id.toString().slice(-6)}`,
+      amount: walletAmountUsed,
+      type: "debit",
+      booking: booking._id,
+    });
   }
 
   await notifyUser(worker.user.toString(), {
@@ -173,8 +203,21 @@ export async function createPaymentIntent(req: Request, res: Response): Promise<
     throw AppError.badRequest("This booking has already been paid");
   }
 
+  const payableAmount = Math.max(
+    0,
+    booking.estimatedPrice - (booking.discountAmount ?? 0) - (booking.walletAmount ?? 0)
+  );
+
+  // Coupon + wallet credit can cover the entire price - Stripe doesn't allow a
+  // zero-amount PaymentIntent, so there's nothing left to charge the card for.
+  if (payableAmount <= 0) {
+    booking.paymentStatus = "paid";
+    await booking.save();
+    ok(res, { clientSecret: null });
+    return;
+  }
+
   const stripe = getStripe();
-  const payableAmount = Math.max(0, booking.estimatedPrice - (booking.discountAmount ?? 0));
   const intent = booking.stripePaymentIntentId
     ? await stripe.paymentIntents.retrieve(booking.stripePaymentIntentId)
     : await stripe.paymentIntents.create({
@@ -268,6 +311,19 @@ export async function updateBookingStatus(req: Request, res: Response): Promise<
     booking.paymentStatus = "refunded";
     booking.cancellationFee = cancellationFee;
     booking.refundAmount = refundAmount;
+  }
+
+  // Wallet credit spent on this booking is always refunded in full on cancellation - it's
+  // internal ledger money, not a real charge, so there's no case for withholding a fee on it.
+  if (status === "cancelled" && booking.walletAmount > 0) {
+    await User.findByIdAndUpdate(booking.customer, { $inc: { walletBalance: booking.walletAmount } });
+    await CustomerWalletTransaction.create({
+      user: booking.customer,
+      label: `Refund for cancelled booking #${booking._id.toString().slice(-6)}`,
+      amount: booking.walletAmount,
+      type: "credit",
+      booking: booking._id,
+    });
   }
 
   booking.status = status;

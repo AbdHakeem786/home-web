@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CalendarCheck, CreditCard, Gift, Bell } from "lucide-react";
+import { CalendarCheck, CreditCard, Gift, Bell, BellOff } from "lucide-react";
 import TopBar from "../../components/ui/TopBar";
 import { notificationsApi, type ApiNotification } from "../../api";
 import { cn } from "../../lib/utils";
@@ -37,7 +37,12 @@ export default function Notifications() {
       <TopBar title="Notifications" />
       <div className="flex flex-col divide-y divide-border">
         {!loading && notifications.length === 0 && (
-          <p className="py-10 text-center text-sm text-ink-muted">No notifications yet.</p>
+          <div className="flex flex-col items-center py-16 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-muted">
+              <BellOff size={20} />
+            </span>
+            <p className="mt-3 text-sm text-ink-muted">No notifications yet.</p>
+          </div>
         )}
         {notifications.map((n) => {
           const Icon = icons[n.type];
@@ -45,9 +50,12 @@ export default function Notifications() {
             <button
               key={n.id}
               onClick={() => handleOpen(n)}
-              className={cn("flex w-full gap-3 px-4 py-3.5 text-left", !n.read && "bg-primary-light/30")}
+              className={cn(
+                "flex w-full gap-3 px-4 py-3.5 text-left transition-colors active:bg-surface",
+                !n.read && "bg-primary-light/30"
+              )}
             >
-              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary-light text-primary">
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary-light text-primary shadow-card">
                 <Icon size={16} />
               </span>
               <div className="min-w-0 flex-1">

@@ -36,8 +36,8 @@ export default function Onboarding() {
         </button>
       </div>
 
-      <div className="flex flex-col items-center text-center">
-        <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-primary-light text-primary">
+      <div key={step} className="flex flex-col items-center text-center animate-[fadeIn_0.35s_ease]">
+        <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-primary-light text-primary shadow-card">
           <Icon size={40} />
         </div>
         <h2 className="mt-8 font-display text-xl font-bold text-ink">{slide.title}</h2>

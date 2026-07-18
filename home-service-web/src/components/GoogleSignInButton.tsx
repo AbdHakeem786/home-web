@@ -33,12 +33,19 @@ let activeCredentialHandler: ((response: { credential: string }) => void) | null
 
 interface GoogleSignInButtonProps {
   onError?: (message: string) => void;
+  // Only pass this from a "sign up as X" flow (e.g. Register's role toggle). Passing it
+  // stops the backend from silently logging into an existing account of the other role
+  // when this Google email is already registered - Login should leave it unset so it can
+  // resolve to whichever role the account actually has.
+  role?: "customer" | "worker";
 }
 
-export default function GoogleSignInButton({ onError }: GoogleSignInButtonProps) {
+export default function GoogleSignInButton({ onError, role }: GoogleSignInButtonProps) {
   const ref = useRef<HTMLDivElement>(null);
   const setSession = useAppStore((s) => s.setSession);
   const navigate = useNavigate();
+  const roleRef = useRef(role);
+  roleRef.current = role;
 
   useEffect(() => {
     if (!CLIENT_ID) return;
@@ -47,7 +54,7 @@ export default function GoogleSignInButton({ onError }: GoogleSignInButtonProps)
 
     async function handleCredential(response: { credential: string }) {
       try {
-        const data = await authApi.googleLogin(response.credential);
+        const data = await authApi.googleLogin(response.credential, roleRef.current);
         setSession(data.user, data.accessToken, data.refreshToken);
         const dest =
           data.user.role === "worker"

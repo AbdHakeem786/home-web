@@ -29,10 +29,10 @@ export async function resendVerificationEmail(phone: string) {
   return res.data;
 }
 
-export async function googleLogin(idToken: string) {
+export async function googleLogin(idToken: string, role?: "customer" | "worker") {
   const res = await api.post<{ user: ApiUser; accessToken: string; refreshToken: string }>(
     "/auth/google",
-    { idToken },
+    { idToken, role },
     false
   );
   tokenStorage.setSession(res.data.accessToken, res.data.refreshToken, res.data.user);

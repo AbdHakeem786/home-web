@@ -37,6 +37,11 @@ export async function setUserActive(id: string, active: boolean) {
   return res.data;
 }
 
+export async function creditCustomerWallet(id: string, amount: number, label?: string) {
+  const res = await api.post<ApiUser>(`/admin/customers/${id}/wallet-credit`, { amount, label });
+  return res.data;
+}
+
 export async function listWorkersAdmin(params: { verified?: boolean; page?: number; limit?: number } = {}) {
   const res = await api.get<ApiWorkerProfile[]>("/admin/workers", params);
   return { workers: res.data, pagination: res.pagination };

@@ -13,13 +13,14 @@ export async function createBooking(input: {
   problemImages?: string[];
   paymentMethod?: "cash" | "stripe";
   couponCode?: string;
+  walletAmount?: number;
 }) {
   const res = await api.post<ApiBooking>("/bookings", input);
   return res.data;
 }
 
 export async function createPaymentIntent(bookingId: string) {
-  const res = await api.post<{ clientSecret: string }>(`/bookings/${bookingId}/payment-intent`);
+  const res = await api.post<{ clientSecret: string | null }>(`/bookings/${bookingId}/payment-intent`);
   return res.data;
 }
 

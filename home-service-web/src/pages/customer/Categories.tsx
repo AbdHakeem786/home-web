@@ -24,6 +24,10 @@ export default function Categories() {
         {!loading && categories.length === 0 && (
           <p className="col-span-3 py-10 text-center text-sm text-ink-muted">No categories available yet.</p>
         )}
+        {loading &&
+          Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="h-23 animate-pulse rounded-2xl border border-border bg-surface" />
+          ))}
       </div>
     </div>
   );

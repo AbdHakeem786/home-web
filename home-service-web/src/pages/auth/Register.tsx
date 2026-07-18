@@ -43,8 +43,8 @@ export default function Register() {
             type="button"
             onClick={() => setRole(r)}
             className={cn(
-              "rounded-lg py-2 text-sm font-medium capitalize transition-colors",
-              role === r ? "bg-card text-primary shadow-sm" : "text-ink-muted"
+              "rounded-lg py-2 text-sm font-medium capitalize transition-all duration-150",
+              role === r ? "bg-card text-primary shadow-card" : "text-ink-muted hover:text-ink"
             )}
           >
             {r}
@@ -109,7 +109,7 @@ export default function Register() {
       </form>
 
       <div className="mt-5">
-        <GoogleSignInButton onError={setError} />
+        <GoogleSignInButton onError={setError} role={role} />
       </div>
 
       <p className="mt-6 text-center text-sm text-ink-muted">

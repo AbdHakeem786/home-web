@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Banknote, CreditCard, Check, Tag, X } from "lucide-react";
+import { Banknote, CreditCard, Check, Tag, Wallet, X } from "lucide-react";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import TopBar from "../../components/ui/TopBar";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import { cn, formatPKR } from "../../lib/utils";
 import { stripePromise } from "../../lib/stripe";
-import { bookingsApi, couponsApi, ApiError, type ApiCouponPreview } from "../../api";
+import { bookingsApi, couponsApi, customerWalletApi, ApiError, type ApiCouponPreview } from "../../api";
 
 const methods = [
   { id: "cash", label: "Cash on completion", icon: Banknote },
@@ -82,9 +82,20 @@ export default function BookingPayment() {
   const [coupon, setCoupon] = useState<ApiCouponPreview | null>(null);
   const [couponError, setCouponError] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [useWallet, setUseWallet] = useState(false);
   const price = state?.estimatedPrice ?? 0;
   const discount = coupon?.discount ?? 0;
-  const payableTotal = Math.max(0, price - discount);
+  const payableAfterCoupon = Math.max(0, price - discount);
+  const walletApplied = useWallet ? Math.min(walletBalance, payableAfterCoupon) : 0;
+  const payableTotal = Math.max(0, payableAfterCoupon - walletApplied);
+
+  useEffect(() => {
+    customerWalletApi
+      .getWalletSummary()
+      .then(({ balance }) => setWalletBalance(balance))
+      .catch(() => undefined);
+  }, []);
 
   async function applyCoupon() {
     const code = couponInput.trim();
@@ -127,6 +138,7 @@ export default function BookingPayment() {
         problemImages: state.problemImages,
         paymentMethod: "cash",
         couponCode: coupon?.code,
+        walletAmount: walletApplied,
       });
       navigate(`/booking/${state.workerId}/track`, { state: { bookingId: booking.id } });
     } catch (err) {
@@ -155,8 +167,14 @@ export default function BookingPayment() {
         problemImages: state.problemImages,
         paymentMethod: "stripe",
         couponCode: coupon?.code,
+        walletAmount: walletApplied,
       });
       const { clientSecret } = await bookingsApi.createPaymentIntent(booking.id);
+      if (!clientSecret) {
+        // Coupon + wallet credit covered the full price - nothing left to charge the card for.
+        navigate(`/booking/${state.workerId}/track`, { state: { bookingId: booking.id } });
+        return;
+      }
       setStripeBooking({ id: booking.id, clientSecret });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not start card payment. Please try again.");
@@ -174,9 +192,9 @@ export default function BookingPayment() {
           <p className="mb-4 rounded-xl bg-danger-light px-3 py-2.5 text-sm text-danger">{error}</p>
         )}
 
-        <div className="rounded-2xl border border-border p-4">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
           <p className="text-sm text-ink-muted">Estimated total</p>
-          {discount > 0 ? (
+          {discount + walletApplied > 0 ? (
             <div className="flex items-baseline gap-2">
               <p className="font-mono text-2xl font-bold text-ink">{formatPKR(payableTotal)}</p>
               <p className="font-mono text-sm text-ink-muted line-through">{formatPKR(price)}</p>
@@ -185,6 +203,9 @@ export default function BookingPayment() {
             <p className="font-mono text-2xl font-bold text-ink">{formatPKR(price)}</p>
           )}
           {coupon && <p className="mt-1 text-xs font-medium text-success">You saved {formatPKR(discount)} with {coupon.code}</p>}
+          {walletApplied > 0 && (
+            <p className="mt-1 text-xs font-medium text-primary">{formatPKR(walletApplied)} paid from wallet</p>
+          )}
           <p className="mt-1 text-xs text-ink-muted">
             Final amount confirmed by the worker after inspecting the job.
           </p>
@@ -218,6 +239,33 @@ export default function BookingPayment() {
               </div>
             )}
           </div>
+        )}
+
+        {!stripeBooking && walletBalance > 0 && (
+          <button
+            type="button"
+            onClick={() => setUseWallet((v) => !v)}
+            className={cn(
+              "mt-3 flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-colors",
+              useWallet ? "border-primary bg-primary-light/50" : "border-border bg-card"
+            )}
+          >
+            <span className={cn("flex h-9 w-9 items-center justify-center rounded-lg", useWallet ? "bg-primary text-white" : "bg-surface text-ink-muted")}>
+              <Wallet size={16} />
+            </span>
+            <span className="flex-1">
+              <span className="block text-sm font-medium text-ink">Use wallet balance</span>
+              <span className="block text-xs text-ink-muted">{formatPKR(walletBalance)} available</span>
+            </span>
+            <span
+              className={cn(
+                "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full",
+                useWallet ? "bg-primary text-white" : "border border-border"
+              )}
+            >
+              {useWallet && <Check size={12} />}
+            </span>
+          </button>
         )}
 
         {!stripeBooking && (

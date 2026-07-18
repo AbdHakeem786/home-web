@@ -26,6 +26,7 @@ export interface IUser extends Document {
   referralCode: string;
   referredBy?: Types.ObjectId;
   referralRewarded: boolean;
+  walletBalance: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,6 +69,7 @@ const userSchema = new Schema<IUser>(
     referralCode: { type: String, unique: true, sparse: true, index: true },
     referredBy: { type: Schema.Types.ObjectId, ref: "User" },
     referralRewarded: { type: Boolean, default: false },
+    walletBalance: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true }
 );

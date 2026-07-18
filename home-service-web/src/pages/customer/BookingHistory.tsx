@@ -139,7 +139,7 @@ export default function BookingHistory() {
           const workerId = b.worker && typeof b.worker === "object" ? b.worker.id : b.worker;
           const active = b.status !== "completed" && b.status !== "cancelled";
           return (
-            <div key={b.id} className="rounded-2xl border border-border p-3.5">
+            <div key={b.id} className="rounded-2xl border border-border bg-card p-3.5 shadow-card">
               <Link
                 to={active ? `/booking/${workerId}/track` : "#"}
                 state={active ? { bookingId: b.id } : undefined}
@@ -173,7 +173,7 @@ export default function BookingHistory() {
                 </button>
               )}
               {reschedulingId === b.id && (
-                <div className="mt-3 flex flex-col gap-2 rounded-xl border border-border p-3">
+                <div className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-surface-alt p-3">
                   {rescheduleError && <p className="text-xs text-danger">{rescheduleError}</p>}
                   <div className="flex gap-2">
                     <Input
@@ -215,7 +215,7 @@ export default function BookingHistory() {
                 ) : null)}
 
               {reviewingId === b.id && (
-                <div className="mt-3 flex flex-col gap-2 rounded-xl border border-border p-3">
+                <div className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-surface-alt p-3">
                   {reviewError && <p className="text-xs text-danger">{reviewError}</p>}
                   <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map((n) => (
@@ -259,7 +259,7 @@ export default function BookingHistory() {
               ) : null}
 
               {reportingId === b.id && (
-                <div className="mt-3 flex flex-col gap-2 rounded-xl border border-border p-3">
+                <div className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-surface-alt p-3">
                   {reportError && <p className="text-xs text-danger">{reportError}</p>}
                   <Input
                     id={`report-subject-${b.id}`}

@@ -31,6 +31,7 @@ export const resendVerificationEmailSchema = z.object({
 export const googleLoginSchema = z.object({
   body: z.object({
     idToken: z.string().min(10),
+    role: z.enum(["customer", "worker"]).optional(),
   }),
 });
 

@@ -19,8 +19,8 @@ export default function BottomNav() {
           to={to}
           className={({ isActive }) =>
             cn(
-              "flex flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-colors",
-              isActive ? "text-primary" : "text-ink-muted"
+              "flex flex-col items-center gap-0.5 rounded-xl px-3.5 py-1.5 text-[11px] font-medium transition-colors",
+              isActive ? "bg-primary-light text-primary" : "text-ink-muted hover:text-ink"
             )
           }
         >

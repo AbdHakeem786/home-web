@@ -4,10 +4,12 @@ import { WorkerProfile } from "../models/WorkerProfile";
 import { Booking } from "../models/Booking";
 import { Complaint } from "../models/Complaint";
 import { WalletTransaction } from "../models/WalletTransaction";
+import { CustomerWalletTransaction } from "../models/CustomerWalletTransaction";
 import { AppError } from "../utils/AppError";
 import { ok, paginated } from "../utils/apiResponse";
 import { parsePagination } from "../utils/pagination";
 import { escapeRegex } from "../utils/regex";
+import { notifyUser } from "../utils/notify";
 
 export async function getDashboardStats(_req: Request, res: Response): Promise<void> {
   const [totalCustomers, totalWorkers, verifiedWorkers, onlineWorkers, bookingsByStatus, openComplaints, revenueAgg] =
@@ -131,6 +133,32 @@ export async function processWithdrawal(req: Request, res: Response): Promise<vo
   }
 
   ok(res, tx);
+}
+
+export async function creditCustomerWallet(req: Request, res: Response): Promise<void> {
+  const { amount, label } = req.body as { amount: number; label?: string };
+
+  const user = await User.findOneAndUpdate(
+    { _id: req.params.id, role: "customer" },
+    { $inc: { walletBalance: amount } },
+    { new: true }
+  );
+  if (!user) throw AppError.notFound("Customer not found");
+
+  await CustomerWalletTransaction.create({
+    user: user._id,
+    label: label?.trim() || "Credit from support",
+    amount,
+    type: "credit",
+  });
+
+  await notifyUser(user._id.toString(), {
+    title: "Wallet credited",
+    body: `Rs ${amount} has been added to your wallet${label ? `: ${label}` : "."}`,
+    type: "payment",
+  });
+
+  ok(res, user);
 }
 
 export async function getAnalytics(req: Request, res: Response): Promise<void> {

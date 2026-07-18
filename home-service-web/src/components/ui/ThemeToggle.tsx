@@ -14,7 +14,7 @@ export default function ThemeToggle({ className }: { className?: string }) {
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       aria-pressed={isDark}
       className={cn(
-        "inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink",
+        "inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium text-ink-muted transition-all duration-150 hover:border-primary/30 hover:text-ink active:scale-[0.98]",
         className
       )}
     >

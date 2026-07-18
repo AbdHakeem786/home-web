@@ -109,7 +109,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
 }
 
 export async function googleLogin(req: Request, res: Response): Promise<void> {
-  const { idToken } = req.body as { idToken: string };
+  const { idToken, role: requestedRole } = req.body as { idToken: string; role?: "customer" | "worker" };
   if (!env.googleClientId) {
     throw AppError.badRequest("Google Sign-In is not configured on this server.");
   }
@@ -138,12 +138,21 @@ export async function googleLogin(req: Request, res: Response): Promise<void> {
       email: payload.email,
       googleId: payload.sub,
       avatar: payload.picture,
-      role: isAdminEmail ? "admin" : "customer",
+      role: isAdminEmail ? "admin" : (requestedRole ?? "customer"),
       phoneVerified: true,
       active: true,
     });
   } else {
     if (!user.active) throw AppError.unauthorized("Account no longer active");
+    // requestedRole is only sent from the "sign up as customer/worker" flow, not from
+    // plain login - so this only fires when someone tries to sign up with a Google
+    // account that's already tied to an account of the other role, and stops them from
+    // being silently logged into that other account instead of the one they meant to create.
+    if (requestedRole && !isAdminEmail && user.role !== requestedRole) {
+      throw AppError.badRequest(
+        `This Google account is already registered as a ${user.role}. Please continue with Google from the ${user.role} login page instead.`
+      );
+    }
     if (!user.googleId) user.googleId = payload.sub;
     if (!user.avatar && payload.picture) user.avatar = payload.picture;
     if (isAdminEmail && user.role !== "admin") user.role = "admin";

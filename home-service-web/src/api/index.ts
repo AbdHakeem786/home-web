@@ -5,6 +5,7 @@ export * as workersApi from "./workers";
 export * as bookingsApi from "./bookings";
 export * as reviewsApi from "./reviews";
 export * as walletApi from "./wallet";
+export * as customerWalletApi from "./customerWallet";
 export * as notificationsApi from "./notifications";
 export * as complaintsApi from "./complaints";
 export * as adminApi from "./admin";

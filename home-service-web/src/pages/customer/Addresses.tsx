@@ -86,8 +86,8 @@ export default function Addresses() {
               <div
                 key={a.id}
                 className={cn(
-                  "flex items-start gap-3 rounded-2xl border p-3.5",
-                  isCurrent ? "border-primary bg-primary-light/40" : "border-border"
+                  "flex items-start gap-3 rounded-2xl border p-3.5 shadow-card transition-colors",
+                  isCurrent ? "border-primary bg-primary-light/40" : "border-border bg-card"
                 )}
               >
                 <span
@@ -119,7 +119,7 @@ export default function Addresses() {
                 <button
                   onClick={() => removeAddress(a.id)}
                   disabled={busyId === a.id}
-                  className="text-ink-muted hover:text-danger"
+                  className="rounded-full p-1 text-ink-muted transition-colors hover:bg-danger-light hover:text-danger"
                   aria-label={`Delete ${a.label}`}
                 >
                   <Trash2 size={16} />
@@ -133,7 +133,7 @@ export default function Addresses() {
         </div>
 
         {adding ? (
-          <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-border p-4">
+          <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-card">
             <Input
               id="label"
               label="Label"

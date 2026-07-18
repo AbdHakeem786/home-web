@@ -28,6 +28,8 @@ import Profile from "./pages/customer/Profile";
 import BookingHistory from "./pages/customer/BookingHistory";
 import Favorites from "./pages/customer/Favorites";
 import Addresses from "./pages/customer/Addresses";
+import Wallet from "./pages/customer/Wallet";
+import Support from "./pages/customer/Support";
 
 import WorkerDashboard from "./pages/worker/Dashboard";
 import WorkerJobs from "./pages/worker/Jobs";
@@ -100,6 +102,8 @@ export default function App() {
               <Route path="/bookings" element={<BookingHistory />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/addresses" element={<Addresses />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/support" element={<Support />} />
             </Route>
 
             <Route

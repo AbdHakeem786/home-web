@@ -71,7 +71,7 @@ export default function WorkerProfile() {
             onClick={() => toggleFavorite(worker.id)}
             aria-label={isFavorited ? "Remove from saved workers" : "Save worker"}
             aria-pressed={isFavorited}
-            className="rounded-lg p-1.5 text-ink-muted hover:bg-surface"
+            className="rounded-full p-1.5 text-ink-muted transition-colors hover:bg-surface"
           >
             <Heart size={20} className={isFavorited ? "fill-danger text-danger" : ""} />
           </button>
@@ -80,7 +80,7 @@ export default function WorkerProfile() {
 
       <div className="px-4 pt-2">
         <div className="flex items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-primary-light font-display text-2xl font-semibold text-primary">
+          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-primary-light font-display text-2xl font-semibold text-primary shadow-card ring-4 ring-primary-light/50">
             {avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : initials}
           </div>
           <div>
@@ -101,17 +101,17 @@ export default function WorkerProfile() {
         </div>
 
         <div className="mt-5 grid grid-cols-3 gap-2">
-          <div className="rounded-xl border border-border p-3 text-center">
+          <div className="rounded-xl border border-border bg-card p-3 text-center shadow-card">
             <Briefcase size={16} className="mx-auto text-primary" />
             <p className="mt-1 font-display text-sm font-semibold text-ink">{worker.completedJobs}</p>
             <p className="text-[11px] text-ink-muted">Jobs done</p>
           </div>
-          <div className="rounded-xl border border-border p-3 text-center">
+          <div className="rounded-xl border border-border bg-card p-3 text-center shadow-card">
             <Award size={16} className="mx-auto text-primary" />
             <p className="mt-1 font-display text-sm font-semibold text-ink">{worker.experienceYears} yrs</p>
             <p className="text-[11px] text-ink-muted">Experience</p>
           </div>
-          <div className="rounded-xl border border-border p-3 text-center">
+          <div className="rounded-xl border border-border bg-card p-3 text-center shadow-card">
             <span className="mx-auto block font-mono text-sm font-semibold text-primary">
               {formatPKR(worker.priceFrom)}
             </span>
@@ -137,7 +137,7 @@ export default function WorkerProfile() {
           </h3>
           <div className="flex flex-col gap-3">
             {workerReviews.map((r) => (
-              <div key={r.id} className="rounded-xl border border-border p-3">
+              <div key={r.id} className="rounded-xl border border-border bg-card p-3 shadow-card">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-ink">{r.customer.name}</p>
                   <span className="text-xs text-ink-muted">
@@ -155,7 +155,7 @@ export default function WorkerProfile() {
         </div>
       </div>
 
-      <div className="sticky bottom-0 mt-6 border-t border-border bg-card p-4">
+      <div className="sticky bottom-0 mt-6 border-t border-border bg-card p-4 shadow-[0_-8px_24px_-16px_rgba(22,18,31,0.18)]">
         {worker.verified ? (
           <Button fullWidth size="lg" onClick={() => navigate(`/booking/new/${worker.id}`)}>
             Book now · {formatPKR(worker.priceFrom)}
